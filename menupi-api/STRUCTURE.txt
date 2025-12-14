@@ -1,0 +1,49 @@
+MENUPI API - Standalone Backend
+================================
+
+Folder Structure:
+-----------------
+menupi-api/
+├── server.js          (4,220 lines - Complete API server)
+├── package.json       (30 lines - Dependencies only)
+├── .env.example       (34 lines - Environment template)
+├── README.md          (199 lines - Full documentation)
+├── UPLOAD_INSTRUCTIONS.md (Quick upload guide)
+└── uploads/           (Empty directory for file uploads)
+    └── .gitkeep
+
+Total Size: ~184KB
+Total Files: 6
+
+Dependencies (package.json):
+----------------------------
+- express (^5.2.1)
+- mysql2 (^3.15.3)
+- cors (^2.8.5)
+- dotenv (^17.2.3)
+- jsonwebtoken (^9.0.3)
+- bcrypt (^6.0.0)
+- multer (^2.0.2)
+
+No Frontend Dependencies:
+-------------------------
+✅ No React
+✅ No Vite
+✅ No TypeScript (frontend)
+✅ No build tools
+
+Key Endpoints:
+--------------
+✅ GET /api/health (Public health check)
+✅ POST /api/auth/login (Authentication)
+✅ GET /api/public/screen/:code (Public TV player)
+✅ All authenticated endpoints included
+
+Configuration:
+--------------
+✅ Port from process.env.PORT
+✅ CORS from ALLOWED_ORIGINS env var
+✅ Database from DB_* env vars
+✅ JWT from JWT_SECRET env var
+
+Ready for Hostinger Upload!
