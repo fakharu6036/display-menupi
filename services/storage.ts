@@ -1,0 +1,743 @@
+import { MediaItem, Screen, Schedule, PlanType, PlanLimits, User, ActivityLog, Invoice, PlaylistItem, PlaybackConfig, SystemSettings, UserRole } from '../types';
+import { cacheManager } from '../utils/cache';
+import { cookieManager } from '../utils/cookies';
+
+// API Configuration - Uses environment variable in production
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001/api';
+
+const getAuthHeaders = () => {
+    const userStr = localStorage.getItem('menupi_user');
+    if (!userStr) return {};
+    const user = JSON.parse(userStr);
+    return {
+        'Authorization': `Bearer ${user.token}`,
+        'Content-Type': 'application/json'
+    };
+};
+
+export const PLAN_CONFIGS: Record<PlanType, PlanLimits> = {
+  [PlanType.FREE]: {
+    id: PlanType.FREE,
+    name: 'Free Starter',
+    price: 'Free',
+    priceAmount: 0,
+    description: 'Perfect for testing and personal use.',
+    storageMB: 15,
+    maxScreens: 1,
+    maxUsers: 1,
+    allowVideo: false,
+    showWatermark: true,
+    features: ['1 Screen limit', '15 MB Storage', 'Image & PDF only', 'Single User', 'Community Support']
+  },
+  [PlanType.BASIC]: {
+    id: PlanType.BASIC,
+    name: 'Basic Business',
+    price: '$9',
+    priceAmount: 9,
+    description: 'For small cafes and shops getting started.',
+    storageMB: 50,
+    maxScreens: 3,
+    maxUsers: 3,
+    allowVideo: true,
+    showWatermark: false,
+    features: ['Up to 3 Screens', '50 MB Storage', 'Video Support (MP4)', '3 Team Members', 'No Watermark', 'Email Support']
+  },
+  [PlanType.PRO]: {
+    id: PlanType.PRO,
+    name: 'Pro Enterprise',
+    price: '$29',
+    priceAmount: 29,
+    description: 'Scale your signage across multiple locations.',
+    storageMB: 200,
+    maxScreens: -1,
+    maxUsers: 20,
+    allowVideo: true,
+    showWatermark: false,
+    features: ['Unlimited Screens', '200 MB Storage', '4K Video Support', '20 Team Members', 'Priority Support', 'Advanced Scheduling', 'Cloud Import (Drive/Dropbox)']
+  },
+};
+
+// --- Storage Service (Now API Service) ---
+
+export const StorageService = {
+  
+  // --- Auth ---
+  login: async (email: string, password: string): Promise<User> => {
+      const res = await fetch(`${API_URL}/login`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email, password })
+      });
+      
+      if (!res.ok) {
+          const err = await res.json();
+          const error = new Error(err.error || 'Failed to login');
+          // Preserve requiresVerification flag for UI handling
+          if (err.requiresVerification) {
+              (error as any).requiresVerification = true;
+          }
+          throw error;
+      }
+      
+      const data = await res.json();
+      const userWithToken = { ...data.user, token: data.token };
+      localStorage.setItem('menupi_user', JSON.stringify(userWithToken));
+      
+      // Clear cache on login (new user session)
+      cacheManager.clearAll();
+      
+      return userWithToken;
+  },
+
+  loginWithGoogle: async (credential: string): Promise<User> => {
+      const res = await fetch(`${API_URL}/auth/google`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ credential })
+      });
+
+      if (!res.ok) {
+          const err = await res.json();
+          throw new Error(err.error || 'Google login failed');
+      }
+
+      const data = await res.json();
+      const userWithToken = { ...data.user, token: data.token };
+      localStorage.setItem('menupi_user', JSON.stringify(userWithToken));
+      
+      // Clear cache on login (new user session)
+      cacheManager.clearAll();
+      
+      return userWithToken;
+  },
+
+  registerUser: async (name: string, email: string, password?: string) => {
+      const res = await fetch(`${API_URL}/register`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ name, email, password: password || 'temp1234' }) 
+      });
+
+      if (!res.ok) {
+          const err = await res.json();
+          throw new Error(err.error || 'Registration failed');
+      }
+
+      const data = await res.json();
+      
+      // New registration flow: returns success message and verification link
+      // Don't auto-login, user needs to verify email first
+      if (data.success) {
+          return {
+              success: true,
+              message: data.message,
+              verificationLink: data.verificationLink // Only in development
+          };
+      }
+      
+      // Legacy flow: auto-login (for backward compatibility)
+      if (data.token && data.user) {
+          const userWithToken = { ...data.user, token: data.token };
+          localStorage.setItem('menupi_user', JSON.stringify(userWithToken));
+          return userWithToken;
+      }
+      
+      return data;
+  },
+
+  getUser: (): User => {
+      const stored = localStorage.getItem('menupi_user');
+      return stored ? JSON.parse(stored) : null;
+  },
+
+  refreshUserData: async (): Promise<User> => {
+      try {
+          const res = await fetch(`${API_URL}/users/me/refresh`, { headers: getAuthHeaders() });
+          if (!res.ok) {
+              throw new Error('Failed to refresh user data');
+          }
+          const updatedUser = await res.json();
+          const currentUser = StorageService.getUser();
+          const newUser = { ...currentUser, ...updatedUser, token: currentUser?.token };
+          localStorage.setItem('menupi_user', JSON.stringify(newUser));
+          window.dispatchEvent(new Event('menupi-user-updated'));
+          return newUser;
+      } catch (e) {
+          console.error('Failed to refresh user data:', e);
+          return StorageService.getUser();
+      }
+  },
+
+  getUserWarnings: async (): Promise<any[]> => {
+      try {
+          const res = await fetch(`${API_URL}/users/me/warnings`, { headers: getAuthHeaders() });
+          if (!res.ok) return [];
+          return res.json();
+      } catch (e) {
+          console.error('Failed to fetch user warnings:', e);
+          return [];
+      }
+  },
+
+  isAccountActive: (user?: User): boolean => {
+      const u = user || StorageService.getUser();
+      return u?.accountStatus === 'active';
+  },
+
+  getTeamMembers: async (): Promise<User[]> => {
+      try {
+          const res = await fetch(`${API_URL}/team`, { headers: getAuthHeaders() });
+          if (!res.ok) return [];
+          return res.json();
+      } catch (e) {
+          console.error('Failed to fetch team members:', e);
+          return [];
+      }
+  },
+
+  updateUserProfile: async (updates: { name?: string; email?: string }): Promise<User> => {
+      const res = await fetch(`${API_URL}/users/me`, {
+          method: 'PUT',
+          headers: getAuthHeaders(),
+          body: JSON.stringify(updates)
+      });
+      
+      if (!res.ok) {
+          // Check if response is JSON before parsing
+          const contentType = res.headers.get('content-type');
+          if (contentType && contentType.includes('application/json')) {
+              const err = await res.json();
+              throw new Error(err.error || 'Failed to update profile');
+          } else {
+              // Response is not JSON (likely HTML error page)
+              const text = await res.text();
+              throw new Error(`Failed to update profile: ${res.status} ${res.statusText}`);
+          }
+      }
+      
+      const updatedUser = await res.json();
+      const currentUser = StorageService.getUser();
+      const newUser = { ...currentUser, ...updatedUser };
+      localStorage.setItem('menupi_user', JSON.stringify(newUser));
+      window.dispatchEvent(new Event('menupi-storage-change'));
+      return newUser;
+  },
+
+  uploadAvatar: async (file: File): Promise<string> => {
+      const headers = getAuthHeaders();
+      const token = headers['Authorization'];
+      
+      const formData = new FormData();
+      formData.append('avatar', file);
+      
+      const res = await fetch(`${API_URL}/users/me/avatar`, {
+          method: 'POST',
+          headers: { 'Authorization': token },
+          body: formData
+      });
+      
+      if (!res.ok) {
+          const contentType = res.headers.get('content-type');
+          if (contentType && contentType.includes('application/json')) {
+              const err = await res.json();
+              throw new Error(err.error || 'Failed to upload avatar');
+          } else {
+              throw new Error(`Failed to upload avatar: ${res.status} ${res.statusText}`);
+          }
+      }
+      
+      const data = await res.json();
+      const currentUser = StorageService.getUser();
+      const newUser = { ...currentUser, avatarUrl: data.avatarUrl };
+      localStorage.setItem('menupi_user', JSON.stringify(newUser));
+      window.dispatchEvent(new Event('menupi-storage-change'));
+      return data.avatarUrl;
+  },
+
+  inviteUser: async (email: string, name: string) => {
+      const res = await fetch(`${API_URL}/team/invite`, {
+          method: 'POST',
+          headers: getAuthHeaders(),
+          body: JSON.stringify({ email, name })
+      });
+      if (!res.ok) {
+          const err = await res.json();
+          throw new Error(err.error || 'Failed to invite user');
+      }
+      window.dispatchEvent(new Event('menupi-storage-change'));
+  },
+
+  removeUser: async (userId: string) => {
+      const res = await fetch(`${API_URL}/team/${userId}`, {
+          method: 'DELETE',
+          headers: getAuthHeaders()
+      });
+      if (!res.ok) {
+          const err = await res.json();
+          throw new Error(err.error || 'Failed to remove user');
+      }
+      window.dispatchEvent(new Event('menupi-storage-change'));
+  },
+
+  // --- Screens ---
+  getScreens: async (forceRefresh = false): Promise<Screen[]> => {
+      // Check cache first
+      if (!forceRefresh) {
+          const cached = cacheManager.get<Screen[]>('screens');
+          if (cached) {
+              return cached;
+          }
+      }
+
+      try {
+          const res = await fetch(`${API_URL}/screens`, { headers: getAuthHeaders() });
+          if (!res.ok) throw new Error('Failed to fetch screens');
+          const data = await res.json();
+          
+          // Cache for 2 minutes (screens change less frequently)
+          // Convert milliseconds to days for cookie expiration (0.0014 days ≈ 2 minutes)
+          cacheManager.set('screens', data, 0.0014);
+          
+          return data;
+      } catch (e) {
+          console.error(e);
+          // Return cached data if available, even if expired
+          const cached = cacheManager.get<Screen[]>('screens');
+          return cached || [];
+      }
+  },
+
+  getScreen: async (id: string): Promise<Screen | undefined> => {
+      const screens = await StorageService.getScreens();
+      return screens.find(s => s.id === id);
+  },
+
+  getScreenByCode: async (code: string): Promise<Screen | undefined> => {
+      try {
+          // Public endpoint - no auth required for TV player
+          const res = await fetch(`${API_URL}/public/screen/${code}`);
+          if (res.ok) {
+              const data = await res.json();
+              // Transform response to match Screen interface
+              return {
+                  id: data.id,
+                  screenCode: data.screenCode,
+                  name: data.name,
+                  orientation: data.orientation,
+                  aspectRatio: data.aspectRatio,
+                  displayMode: data.displayMode,
+                  playlist: data.playlist,
+                  createdAt: data.createdAt,
+                  lastPing: data.lastPing
+              };
+          }
+      } catch (e) {
+          console.error('Error fetching screen by code:', e);
+      }
+      return undefined; 
+  },
+
+  pingScreen: (screenId: string) => {
+      console.log('Ping', screenId);
+  },
+
+  saveScreen: async (screen: Screen) => {
+      if (screen.id && screen.id.length < 10) { 
+          await fetch(`${API_URL}/screens/${screen.id}`, {
+              method: 'PUT',
+              headers: getAuthHeaders(),
+              body: JSON.stringify(screen)
+          });
+      } else {
+          await fetch(`${API_URL}/screens`, {
+              method: 'POST',
+              headers: getAuthHeaders(),
+              body: JSON.stringify(screen)
+          });
+      }
+      
+      // Invalidate cache when screen is updated
+      cacheManager.invalidateScreens();
+      window.dispatchEvent(new Event('menupi-storage-change'));
+  },
+
+  deleteScreen: async (id: string) => {
+      await fetch(`${API_URL}/screens/${id}`, {
+          method: 'DELETE',
+          headers: getAuthHeaders()
+      });
+      
+      // Invalidate cache
+      cacheManager.invalidateScreens();
+      window.dispatchEvent(new Event('menupi-storage-change'));
+  },
+
+  duplicateScreen: async (id: string) => {
+      // Check if user can create more screens before duplicating
+      const canCreate = await StorageService.canCreateScreen();
+      if (!canCreate.allowed) {
+          throw new Error(canCreate.reason || 'Screen limit reached');
+      }
+      
+      const screen = await StorageService.getScreen(id);
+      if (screen) {
+          const newScreen = { ...screen, id: '', name: `${screen.name} (Copy)`, screenCode: StorageService.generateCode() };
+          await StorageService.saveScreen(newScreen);
+      }
+  },
+
+  // --- Media ---
+  getMedia: async (forceRefresh = false): Promise<MediaItem[]> => {
+      // Check cache first (3 minutes TTL)
+      if (!forceRefresh) {
+          const cached = cacheManager.get<MediaItem[]>('media', 3 * 60 * 1000);
+          if (cached) {
+              return cached;
+          }
+      }
+
+      try {
+          const res = await fetch(`${API_URL}/media`, { headers: getAuthHeaders() });
+          if (!res.ok) return [];
+          const data = await res.json();
+          
+          // Cache for 3 minutes (media changes less frequently)
+          // Convert milliseconds to days for cookie expiration (0.002 days ≈ 3 minutes)
+          cacheManager.set('media', data, 0.002);
+          
+          return data;
+      } catch (e) {
+          // Return cached data if available
+          const cached = cacheManager.get<MediaItem[]>('media');
+          return cached || [];
+      }
+  },
+
+  uploadMedia: async (file: File) => {
+      const headers = getAuthHeaders();
+      const token = headers['Authorization'];
+      
+      const formData = new FormData();
+      formData.append('file', file);
+      
+      const res = await fetch(`${API_URL}/media`, {
+          method: 'POST',
+          headers: { 'Authorization': token },
+          body: formData
+      });
+      
+      if (!res.ok) throw new Error('Upload failed');
+      
+      // Invalidate cache when media is uploaded
+      cacheManager.invalidateMedia();
+      cacheManager.invalidateStorage();
+      window.dispatchEvent(new Event('menupi-storage-change'));
+  },
+
+  saveMedia: async (media: MediaItem) => {
+      // For external links/web imports
+      console.log('Saving external media', media);
+      window.dispatchEvent(new Event('menupi-storage-change'));
+  },
+
+  deleteMedia: async (id: string) => {
+      await fetch(`${API_URL}/media/${id}`, {
+          method: 'DELETE',
+          headers: getAuthHeaders()
+      });
+      
+      // Invalidate cache
+      cacheManager.invalidateMedia();
+      cacheManager.invalidateStorage();
+      window.dispatchEvent(new Event('menupi-storage-change'));
+  },
+
+  deleteMediaBatch: async (ids: string[]) => {
+      await Promise.all(ids.map(id => StorageService.deleteMedia(id)));
+  },
+
+  duplicateMedia: async (id: string) => {
+      window.dispatchEvent(new Event('menupi-storage-change'));
+  },
+
+  reimportMedia: async (id: string) => {
+      console.log('Reimporting', id);
+  },
+
+  addMediaToScreen: async (screenId: string, mediaIds: string[], position: 'top' | 'end', config: PlaybackConfig) => {
+      const screen = await StorageService.getScreen(screenId);
+      if (!screen) throw new Error("Screen not found");
+
+      const newItems: PlaylistItem[] = mediaIds.map((mid, idx) => ({
+          id: Date.now() + '-' + idx,
+          mediaId: mid,
+          duration: config.duration,
+          order: 0,
+          playbackConfig: config
+      }));
+
+      let newPlaylist = [...screen.playlist];
+      if (position === 'top') {
+          newPlaylist = [...newItems, ...newPlaylist];
+      } else {
+          newPlaylist = [...newPlaylist, ...newItems];
+      }
+      
+      await StorageService.saveScreen({ ...screen, playlist: newPlaylist });
+  },
+
+  // --- Schedules ---
+  getSchedules: async (forceRefresh = false): Promise<Schedule[]> => {
+      // Check cache first
+      if (!forceRefresh) {
+          const cached = cacheManager.get<Schedule[]>('schedules');
+          if (cached) {
+              return cached;
+          }
+      }
+
+      try {
+          const res = await fetch(`${API_URL}/schedules`, { headers: getAuthHeaders() });
+          if (!res.ok) return [];
+          const data = await res.json();
+          
+          // Cache for 2 minutes
+          // Cache for 2 minutes (0.0014 days ≈ 2 minutes)
+          cacheManager.set('schedules', data, 0.0014);
+          
+          return data;
+      } catch (e) {
+          // Return cached data if available
+          const cached = cacheManager.get<Schedule[]>('schedules');
+          return cached || [];
+      }
+  },
+
+  saveSchedule: async (schedule: Schedule) => {
+      await fetch(`${API_URL}/schedules`, {
+          method: 'POST',
+          headers: getAuthHeaders(),
+          body: JSON.stringify(schedule)
+      });
+      
+      // Invalidate cache
+      cacheManager.invalidateSchedules();
+      window.dispatchEvent(new Event('menupi-storage-change'));
+  },
+
+  deleteSchedule: async (id: string) => {
+      await fetch(`${API_URL}/schedules/${id}`, {
+          method: 'DELETE',
+          headers: getAuthHeaders()
+      });
+      
+      // Invalidate cache
+      cacheManager.invalidateSchedules();
+      window.dispatchEvent(new Event('menupi-storage-change'));
+  },
+
+  // --- Admin / System ---
+  getAllRestaurants: async (): Promise<any[]> => {
+      try {
+          const res = await fetch(`${API_URL}/admin/restaurants`, { headers: getAuthHeaders() });
+          if (!res.ok) return [];
+          const restaurants = await res.json();
+          // Return full restaurant data with stats
+          return restaurants.map((r: any) => ({
+              id: r.id,
+              name: r.ownerName || r.name,
+              email: r.ownerEmail || r.email,
+              avatarUrl: r.avatarUrl,
+              role: UserRole.OWNER,
+              plan: r.plan as PlanType,
+              restaurantId: r.id,
+              accountStatus: r.accountStatus,
+              createdAt: r.createdAt,
+              stats: r.stats || {
+                  screenCount: 0,
+                  mediaCount: 0,
+                  storageMB: 0,
+                  storageBreakdown: {}
+              }
+          }));
+      } catch (e) {
+          console.error('Failed to fetch restaurants:', e);
+          return [];
+      }
+  },
+
+  getSystemStats: async () => {
+      try {
+          const res = await fetch(`${API_URL}/admin/stats`, { headers: getAuthHeaders() });
+          if (!res.ok) {
+              return { totalUsers: 0, totalScreens: 0, activeScreens: 0, totalStorageMB: 0, totalFiles: 0, estimatedRevenue: 0 };
+          }
+          return res.json();
+      } catch (e) {
+          console.error('Failed to fetch system stats:', e);
+          return { totalUsers: 0, totalScreens: 0, activeScreens: 0, totalStorageMB: 0, totalFiles: 0, estimatedRevenue: 0 };
+      }
+  },
+
+  getSettings: (): SystemSettings => ({
+      smtp: { host: 'smtp.mailgun.org', port: 587, encryption: 'TLS', user: 'postmaster', pass: 'secret', enabled: true }
+  }),
+
+  saveSettings: (settings: SystemSettings) => {
+      console.log('Settings saved', settings);
+  },
+
+  getActivities: async (): Promise<ActivityLog[]> => {
+      try {
+          const res = await fetch(`${API_URL}/admin/activities`, { headers: getAuthHeaders() });
+          if (!res.ok) return [];
+          return res.json();
+      } catch (e) {
+          console.error('Failed to fetch activities:', e);
+          return [];
+      }
+  },
+
+  logActivity: (action: string, details: string) => console.log(action, details),
+
+  adminCreateUser: (name: string, email: string, plan: PlanType, role: UserRole) => {
+      return { user: { id: 'new', name, email, plan, role } as User, password: 'temp-password-123' };
+  },
+
+  adminUpdateUser: (id: string, updates: Partial<User>) => {
+      console.log('Admin updated user', id, updates);
+  },
+
+  adminDeleteUser: (id: string) => {
+      console.log('Admin deleted user', id);
+  },
+
+  adminResetPassword: (id: string) => {
+      console.log('Reset password for', id);
+  },
+
+  simulateSendEmail: async (to: string, subject: string, body: string) => {
+      return { sent: true, server: 'smtp.mailgun.org' };
+  },
+
+  // --- Helpers ---
+  // Generate secure, non-guessable shortcode (Base32-like, excludes confusing chars)
+  // Note: In production, backend generates codes using crypto.randomBytes
+  // This client-side version is for preview/development only
+  generateCode: () => {
+      const chars = '23456789ABCDEFGHJKLMNPQRSTUVWXYZ'; // Base32-like, excludes 0, O, I, 1
+      let result = '';
+      for (let i = 0; i < 6; i++) {
+        result += chars.charAt(Math.floor(Math.random() * chars.length));
+      }
+      return result;
+  },
+
+  getStorageUsage: async (forceRefresh = false): Promise<number> => {
+      // Check cache first
+      if (!forceRefresh) {
+          const cached = cacheManager.get<number>('storage_usage');
+          if (cached !== null) {
+              return cached;
+          }
+      }
+
+      try {
+          const res = await fetch(`${API_URL}/storage/usage`, { headers: getAuthHeaders() });
+          if (!res.ok) return 0;
+          const data = await res.json();
+          const usage = data.usedMB || 0;
+          
+          // Cache for 1 minute (storage changes when media is uploaded/deleted)
+          // Cache for 1 minute (0.0007 days ≈ 1 minute)
+          cacheManager.set('storage_usage', usage, 0.0007);
+          
+          return usage;
+      } catch (e) {
+          console.error('Failed to fetch storage usage:', e);
+          // Return cached data if available
+          const cached = cacheManager.get<number>('storage_usage');
+          return cached !== null ? cached : 0;
+      }
+  },
+  
+  getStorageBreakdown: async (forceRefresh = false) => {
+      // Check cache first
+      if (!forceRefresh) {
+          const cached = cacheManager.get<{ image: number; video: number; pdf: number; gif: number; other: number }>('storage_breakdown');
+          if (cached) {
+              return cached;
+          }
+      }
+
+      try {
+          const res = await fetch(`${API_URL}/storage/breakdown`, { headers: getAuthHeaders() });
+          if (!res.ok) return { image: 0, video: 0, pdf: 0, gif: 0, other: 0 };
+          const data = await res.json();
+          
+          // Cache for 1 minute
+          // Cache for 1 minute (0.0007 days ≈ 1 minute)
+          cacheManager.set('storage_breakdown', data, 0.0007);
+          
+          return data;
+      } catch (e) {
+          console.error('Failed to fetch storage breakdown:', e);
+          // Return cached data if available
+          const cached = cacheManager.get<{ image: number; video: number; pdf: number; gif: number; other: number }>('storage_breakdown');
+          return cached || { image: 0, video: 0, pdf: 0, gif: 0, other: 0 };
+      }
+  },
+  
+  getCurrentPlanConfig: (): PlanLimits => {
+      const user = StorageService.getUser();
+      const plan = user?.plan || PlanType.FREE;
+      return PLAN_CONFIGS[plan];
+  },
+  
+  canCreateScreen: async () => {
+      const user = StorageService.getUser();
+      if (!user) return { allowed: false, reason: 'Not authenticated' };
+      
+      try {
+          const screens = await StorageService.getScreens();
+          const planConfig = StorageService.getCurrentPlanConfig();
+          
+          if (planConfig.maxScreens === -1) {
+              return { allowed: true };
+          }
+          
+          if (screens.length >= planConfig.maxScreens) {
+              return { allowed: false, reason: `Plan limit reached (${planConfig.maxScreens} screens)` };
+          }
+          
+          return { allowed: true };
+      } catch (e) {
+          return { allowed: false, reason: 'Error checking limits' };
+      }
+  },
+  
+  canUpload: async (size: number, type: string) => {
+      const user = StorageService.getUser();
+      if (!user) return { allowed: false, reason: 'Not authenticated' };
+      
+      try {
+          const usedMB = await StorageService.getStorageUsage();
+          const planConfig = StorageService.getCurrentPlanConfig();
+          const sizeMB = size / (1024 * 1024);
+          
+          // Check storage limit
+          if (usedMB + sizeMB > planConfig.storageMB) {
+              return { allowed: false, reason: `Storage limit reached (${planConfig.storageMB} MB)` };
+          }
+          
+          // Check video support
+          if (type.startsWith('video/') && !planConfig.allowVideo) {
+              return { allowed: false, reason: 'Video uploads require Basic or Pro plan' };
+          }
+          
+          return { allowed: true };
+      } catch (e) {
+          return { allowed: false, reason: 'Error checking limits' };
+      }
+  },
+};

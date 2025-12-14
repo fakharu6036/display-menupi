@@ -1,0 +1,16 @@
+#!/bin/bash
+echo "System Check Results:"
+echo "===================="
+echo ""
+echo "MySQL:"
+which mysql > /dev/null 2>&1 && echo "  ✓ MySQL client: $(which mysql)" || echo "  ✗ MySQL client: Not found"
+brew services list 2>/dev/null | grep -q mysql && echo "  ✓ MySQL service: Found" || echo "  ✗ MySQL service: Not found"
+echo ""
+echo "Docker:"
+docker --version > /dev/null 2>&1 && echo "  ✓ Docker: $(docker --version | cut -d' ' -f3)" || echo "  ✗ Docker: Not installed"
+echo ""
+echo "Port 3306:"
+lsof -i :3306 > /dev/null 2>&1 && echo "  ✓ Port 3306: In use" || echo "  ✗ Port 3306: Free"
+echo ""
+echo "Current DB Config:"
+grep "^DB_HOST" .env 2>/dev/null | head -1
