@@ -24,3 +24,21 @@ dist-ssr
 *.sw?
 .vercel
 .env*.local
+
+# Environment files
+.env
+.env.local
+.env.production
+.env.development
+
+# PID files
+*.pid
+backend.pid
+frontend.pid
+server.pid
+
+# Vercel
+.vercel
+
+# Uploads (if sensitive)
+# uploads/*
