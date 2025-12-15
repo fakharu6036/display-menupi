@@ -17,6 +17,22 @@ const getApiUrl = () => {
 };
 const API_URL = getApiUrl();
 
+// Runtime URL sanitizer - fixes double /api/ prefix even with old cached bundles
+// This ensures URLs like https://api.menupi.com/api/screens become https://api.menupi.com/screens
+const sanitizeApiUrl = (url: string): string => {
+    // Fix double /api/ prefix: https://api.menupi.com/api/screens -> https://api.menupi.com/screens
+    // Pattern: https://api.menupi.com/api/anything -> https://api.menupi.com/anything
+    return url.replace(/(https?:\/\/api\.menupi\.com)\/api\/(.+)/, '$1/$2');
+};
+
+// Helper to construct API URLs correctly
+// Since api.menupi.com subdomain points to /api/, we don't add /api/ to paths
+const apiUrl = (path: string): string => {
+    const cleanPath = path.startsWith('/') ? path : `/${path}`;
+    const fullUrl = `${API_URL}${cleanPath}`;
+    return sanitizeApiUrl(fullUrl);
+};
+
 // Helper to handle authentication errors
 const handleAuthError = (status: number) => {
     if (status === 401 || status === 403) {
@@ -89,7 +105,7 @@ export const StorageService = {
   
   // --- Auth ---
   login: async (email: string, password: string): Promise<User> => {
-      const res = await fetch(`${API_URL}/login`, {
+      const res = await fetch(apiUrl('/login'), {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ email, password })
@@ -116,7 +132,7 @@ export const StorageService = {
   },
 
   loginWithGoogle: async (credential: string): Promise<User> => {
-      const res = await fetch(`${API_URL}/auth/google`, {
+      const res = await fetch(apiUrl('/auth/google'), {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ credential })
@@ -138,7 +154,7 @@ export const StorageService = {
   },
 
   registerUser: async (name: string, email: string, password?: string) => {
-      const res = await fetch(`${API_URL}/register`, {
+      const res = await fetch(apiUrl('/register'), {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ name, email, password: password || 'temp1234' }) 
@@ -180,7 +196,7 @@ export const StorageService = {
       try {
           const headers = getAuthHeaders();
           const token = headers['Authorization']?.replace('Bearer ', '') || headers['X-Authorization']?.replace('Bearer ', '');
-          const url = token ? `${API_URL}/users/me/refresh?token=${encodeURIComponent(token)}` : `${API_URL}/users/me/refresh`;
+          const url = token ? `${apiUrl('/users/me/refresh')}?token=${encodeURIComponent(token)}` : apiUrl('/users/me/refresh');
           const res = await fetch(url, { headers });
           if (!res.ok) {
               if (handleAuthError(res.status)) {
@@ -202,7 +218,7 @@ export const StorageService = {
 
   getUserWarnings: async (): Promise<any[]> => {
       try {
-          const res = await fetch(`${API_URL}/users/me/warnings`, { headers: getAuthHeaders() });
+          const res = await fetch(apiUrl('/users/me/warnings'), { headers: getAuthHeaders() });
           if (!res.ok) return [];
           return res.json();
       } catch (e) {
@@ -218,7 +234,7 @@ export const StorageService = {
 
   getTeamMembers: async (): Promise<User[]> => {
       try {
-          const res = await fetch(`${API_URL}/team`, { headers: getAuthHeaders() });
+          const res = await fetch(apiUrl('/team'), { headers: getAuthHeaders() });
           if (!res.ok) return [];
           return res.json();
       } catch (e) {
@@ -228,7 +244,7 @@ export const StorageService = {
   },
 
   updateUserProfile: async (updates: { name?: string; email?: string }): Promise<User> => {
-      const res = await fetch(`${API_URL}/users/me`, {
+      const res = await fetch(apiUrl('/users/me'), {
           method: 'PUT',
           headers: getAuthHeaders(),
           body: JSON.stringify(updates)
@@ -262,7 +278,7 @@ export const StorageService = {
       const formData = new FormData();
       formData.append('avatar', file);
       
-      const res = await fetch(`${API_URL}/users/me/avatar`, {
+      const res = await fetch(apiUrl('/users/me/avatar'), {
           method: 'POST',
           headers: { 'Authorization': token },
           body: formData
@@ -287,7 +303,7 @@ export const StorageService = {
   },
 
   inviteUser: async (email: string, name: string) => {
-      const res = await fetch(`${API_URL}/team/invite`, {
+      const res = await fetch(apiUrl('/team/invite'), {
           method: 'POST',
           headers: getAuthHeaders(),
           body: JSON.stringify({ email, name })
@@ -300,7 +316,7 @@ export const StorageService = {
   },
 
   removeUser: async (userId: string) => {
-      const res = await fetch(`${API_URL}/team/${userId}`, {
+      const res = await fetch(apiUrl(`/team/${userId}`), {
           method: 'DELETE',
           headers: getAuthHeaders()
       });
@@ -324,7 +340,7 @@ export const StorageService = {
       try {
           const headers = getAuthHeaders();
           const token = headers['Authorization']?.replace('Bearer ', '') || headers['X-Authorization']?.replace('Bearer ', '');
-          const url = token ? `${API_URL}/screens?token=${encodeURIComponent(token)}` : `${API_URL}/screens`;
+          const url = token ? `${apiUrl('/screens')}?token=${encodeURIComponent(token)}` : apiUrl('/screens');
           const res = await fetch(url, { headers });
           if (!res.ok) {
               if (handleAuthError(res.status)) {
@@ -368,7 +384,7 @@ export const StorageService = {
   getScreenByCode: async (code: string): Promise<Screen | undefined> => {
       try {
           // Public endpoint - no auth required for TV player
-          const res = await fetch(`${API_URL}/public/screen/${code}`);
+          const res = await fetch(apiUrl(`/public/screen/${code}`));
           if (res.ok) {
               const data = await res.json();
               // Transform response to match Screen interface
@@ -396,13 +412,13 @@ export const StorageService = {
 
   saveScreen: async (screen: Screen) => {
       if (screen.id && screen.id.length < 10) { 
-          await fetch(`${API_URL}/screens/${screen.id}`, {
+          await fetch(apiUrl(`/screens/${screen.id}`), {
               method: 'PUT',
               headers: getAuthHeaders(),
               body: JSON.stringify(screen)
           });
       } else {
-          await fetch(`${API_URL}/screens`, {
+          await fetch(apiUrl('/screens'), {
               method: 'POST',
               headers: getAuthHeaders(),
               body: JSON.stringify(screen)
@@ -415,7 +431,7 @@ export const StorageService = {
   },
 
   deleteScreen: async (id: string) => {
-      await fetch(`${API_URL}/screens/${id}`, {
+      await fetch(apiUrl(`/screens/${id}`), {
           method: 'DELETE',
           headers: getAuthHeaders()
       });
@@ -450,7 +466,7 @@ export const StorageService = {
       }
 
       try {
-          const res = await fetch(`${API_URL}/media`, { headers: getAuthHeaders() });
+          const res = await fetch(apiUrl('/media'), { headers: getAuthHeaders() });
           if (!res.ok) return [];
           const data = await res.json();
           
@@ -517,7 +533,7 @@ export const StorageService = {
       const formData = new FormData();
       formData.append('file', file);
       
-      const res = await fetch(`${API_URL}/media`, {
+      const res = await fetch(apiUrl('/media'), {
           method: 'POST',
           headers: { 'Authorization': token },
           body: formData
@@ -538,7 +554,7 @@ export const StorageService = {
   },
 
   deleteMedia: async (id: string) => {
-      await fetch(`${API_URL}/media/${id}`, {
+      await fetch(apiUrl(`/media/${id}`), {
           method: 'DELETE',
           headers: getAuthHeaders()
       });
@@ -594,7 +610,7 @@ export const StorageService = {
       }
 
       try {
-          const res = await fetch(`${API_URL}/schedules`, { headers: getAuthHeaders() });
+          const res = await fetch(apiUrl('/schedules'), { headers: getAuthHeaders() });
           if (!res.ok) return [];
           const data = await res.json();
           
@@ -611,7 +627,7 @@ export const StorageService = {
   },
 
   saveSchedule: async (schedule: Schedule) => {
-      await fetch(`${API_URL}/schedules`, {
+      await fetch(apiUrl('/schedules'), {
           method: 'POST',
           headers: getAuthHeaders(),
           body: JSON.stringify(schedule)
@@ -623,7 +639,7 @@ export const StorageService = {
   },
 
   deleteSchedule: async (id: string) => {
-      await fetch(`${API_URL}/schedules/${id}`, {
+      await fetch(apiUrl(`/schedules/${id}`), {
           method: 'DELETE',
           headers: getAuthHeaders()
       });
@@ -636,7 +652,7 @@ export const StorageService = {
   // --- Admin / System ---
   getAllRestaurants: async (): Promise<any[]> => {
       try {
-          const res = await fetch(`${API_URL}/admin/restaurants`, { headers: getAuthHeaders() });
+          const res = await fetch(apiUrl('/admin/restaurants'), { headers: getAuthHeaders() });
           if (!res.ok) return [];
           const restaurants = await res.json();
           // Return full restaurant data with stats
@@ -665,7 +681,7 @@ export const StorageService = {
 
   getSystemStats: async () => {
       try {
-          const res = await fetch(`${API_URL}/admin/stats`, { headers: getAuthHeaders() });
+          const res = await fetch(apiUrl('/admin/stats'), { headers: getAuthHeaders() });
           if (!res.ok) {
               return { totalUsers: 0, totalScreens: 0, activeScreens: 0, totalStorageMB: 0, totalFiles: 0, estimatedRevenue: 0 };
           }
@@ -686,7 +702,7 @@ export const StorageService = {
 
   getActivities: async (): Promise<ActivityLog[]> => {
       try {
-          const res = await fetch(`${API_URL}/admin/activities`, { headers: getAuthHeaders() });
+          const res = await fetch(apiUrl('/admin/activities'), { headers: getAuthHeaders() });
           if (!res.ok) return [];
           return res.json();
       } catch (e) {
@@ -746,7 +762,7 @@ export const StorageService = {
               return 0;
           }
           
-          const res = await fetch(`${API_URL}/storage/usage`, { headers });
+          const res = await fetch(apiUrl('/storage/usage'), { headers });
           if (!res.ok) {
               const errorData = await res.json().catch(() => ({}));
               console.error('Storage usage error:', res.status, errorData);
@@ -787,7 +803,7 @@ export const StorageService = {
               return { image: 0, video: 0, pdf: 0, gif: 0, other: 0 };
           }
           
-          const res = await fetch(`${API_URL}/storage/breakdown`, { headers });
+          const res = await fetch(apiUrl('/storage/breakdown'), { headers });
           if (!res.ok) {
               const errorData = await res.json().catch(() => ({}));
               console.error('Storage breakdown error:', res.status, errorData);
