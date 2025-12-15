@@ -22,15 +22,28 @@ const API_URL = getApiUrl();
 const sanitizeApiUrl = (url: string): string => {
     // Fix double /api/ prefix: https://api.menupi.com/api/screens -> https://api.menupi.com/screens
     // Pattern: https://api.menupi.com/api/anything -> https://api.menupi.com/anything
-    return url.replace(/(https?:\/\/api\.menupi\.com)\/api\/(.+)/, '$1/$2');
+    // More aggressive: catch any /api/api/ or /api/ after api.menupi.com
+    if (url.includes('api.menupi.com')) {
+        // Remove /api/ if it appears after the domain
+        url = url.replace(/(https?:\/\/api\.menupi\.com)\/api\//, '$1/');
+        // Also catch double /api/api/
+        url = url.replace(/\/api\/api\//g, '/api/');
+    }
+    return url;
 };
 
 // Helper to construct API URLs correctly
 // Since api.menupi.com subdomain points to /api/, we don't add /api/ to paths
 const apiUrl = (path: string): string => {
     const cleanPath = path.startsWith('/') ? path : `/${path}`;
-    const fullUrl = `${API_URL}${cleanPath}`;
-    return sanitizeApiUrl(fullUrl);
+    let fullUrl = `${API_URL}${cleanPath}`;
+    // Always sanitize to fix any double /api/ issues (works with old cached bundles too)
+    fullUrl = sanitizeApiUrl(fullUrl);
+    // Debug: Log if we're fixing a URL (helps identify old bundle issues)
+    if (fullUrl.includes('/api/') && fullUrl.includes('api.menupi.com')) {
+        console.warn('[apiUrl] Fixed double /api/ prefix:', fullUrl);
+    }
+    return fullUrl;
 };
 
 // Helper to handle authentication errors
