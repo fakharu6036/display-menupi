@@ -114,7 +114,7 @@ const App: React.FC = () => {
           <Route path="/tv" element={<TvLogin />} />
           <Route path="/tv/:screenCode" element={<PublicPlayer />} />
           
-          {/* TV Subdomain Route: tv.menupi.com/[code] */}
+          {/* TV Subdomain Route: tv.menupi.com/[code] - Must be last to catch screen codes */}
           <Route path="/:screenCode" element={<TvSubdomainRoute />} />
         </Routes>
       </Layout>

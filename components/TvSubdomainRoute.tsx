@@ -10,12 +10,18 @@ import PublicPlayer from '../pages/PublicPlayer';
 const TvSubdomainRoute: React.FC = () => {
   const { screenCode } = useParams<{ screenCode: string }>();
   const hostname = window.location.hostname;
+  const pathname = window.location.pathname;
 
   // Check if we're on tv.menupi.com subdomain
   const isTvSubdomain = hostname === 'tv.menupi.com' || hostname === 'localhost' || hostname.includes('tv.');
 
   // If on TV subdomain and we have a screen code, show the player
+  // Make sure the URL stays as /[code] and doesn't change to /tv/[code]
   if (isTvSubdomain && screenCode) {
+    // If URL somehow changed to /tv/[code], redirect back to /[code]
+    if (pathname.startsWith('/tv/')) {
+      window.history.replaceState(null, '', `/${screenCode}`);
+    }
     return <PublicPlayer />;
   }
 
