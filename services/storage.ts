@@ -446,14 +446,14 @@ export const StorageService = {
                   try {
                       const urlObj = new URL(item.url);
                       const path = urlObj.pathname;
-                      const apiBaseUrl = API_URL.replace(/\/api\/?$/, '');
+                      const apiBaseUrl = getApiBaseUrl();
                       const baseUrl = apiBaseUrl.startsWith('http') ? apiBaseUrl : `https://${apiBaseUrl}`;
                       const cleanPath = path.startsWith('/') ? path : `/${path}`;
                       return { ...item, url: `${baseUrl}${cleanPath}` };
                   } catch (e) {
                       const pathMatch = item.url.match(/\/(uploads\/.+)$/);
                       if (pathMatch) {
-                          const apiBaseUrl = API_URL.replace(/\/api\/?$/, '');
+                          const apiBaseUrl = getApiBaseUrl();
                           const baseUrl = apiBaseUrl.startsWith('http') ? apiBaseUrl : `https://${apiBaseUrl}`;
                           return { ...item, url: `${baseUrl}/${pathMatch[1]}` };
                       }
@@ -476,14 +476,14 @@ export const StorageService = {
                       try {
                           const urlObj = new URL(item.url);
                           const path = urlObj.pathname;
-                          const apiBaseUrl = API_URL.replace(/\/api\/?$/, '');
+                          const apiBaseUrl = getApiBaseUrl();
                           const baseUrl = apiBaseUrl.startsWith('http') ? apiBaseUrl : `https://${apiBaseUrl}`;
                           const cleanPath = path.startsWith('/') ? path : `/${path}`;
                           return { ...item, url: `${baseUrl}${cleanPath}` };
                       } catch (e) {
                           const pathMatch = item.url.match(/\/(uploads\/.+)$/);
                           if (pathMatch) {
-                              const apiBaseUrl = API_URL.replace(/\/api\/?$/, '');
+                              const apiBaseUrl = getApiBaseUrl();
                               const baseUrl = apiBaseUrl.startsWith('http') ? apiBaseUrl : `https://${apiBaseUrl}`;
                               return { ...item, url: `${baseUrl}/${pathMatch[1]}` };
                           }
