@@ -233,6 +233,16 @@ const PublicPlayer: React.FC = () => {
                 }
                 return;
             }
+        } catch (err: any) {
+            // Handle network errors with better messages
+            if (err.message?.includes('Failed to fetch') || err.name === 'TypeError') {
+                setError(`Cannot connect to API. Please check if ${API_URL} is accessible.`);
+            } else {
+                setError(err.message || "Failed to load screen");
+            }
+            console.error('Error loading screen:', err);
+            return;
+        }
             
             const data = await res.json();
             
