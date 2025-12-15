@@ -55,10 +55,8 @@ if (empty($path) || $path === '/') {
     }
 }
 
-// Debug: Log the parsed path
-if (getenv('NODE_ENV') !== 'production') {
-    error_log("Parsed path: " . $path);
-}
+// Debug: Log the parsed path (always log for troubleshooting)
+error_log("MENUPI API - Request: " . ($_SERVER['REQUEST_METHOD'] ?? 'UNKNOWN') . " " . ($_SERVER['REQUEST_URI'] ?? 'UNKNOWN') . " -> Parsed path: " . $path);
 
 // Set global path for routes
 $GLOBALS['path'] = $path;
