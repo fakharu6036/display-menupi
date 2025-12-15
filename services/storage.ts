@@ -1,7 +1,7 @@
 import { MediaItem, Screen, Schedule, PlanType, PlanLimits, User, ActivityLog, Invoice, PlaylistItem, PlaybackConfig, SystemSettings, UserRole } from '../types';
 import { cacheManager } from '../utils/cache';
 import { cookieManager } from '../utils/cookies';
-import { apiUrl, getApiBaseUrl, API_URL } from '../utils/apiUrl';
+import { apiUrl, getApiBaseUrl } from '../utils/apiUrl';
 
 // Helper to handle authentication errors
 const handleAuthError = (status: number) => {
