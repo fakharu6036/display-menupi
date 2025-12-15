@@ -30,18 +30,17 @@ RewriteRule .* - [E=REDIRECT_HTTP_AUTHORIZATION:%1]
 RewriteCond %{HTTP:X-Authorization} ^(.+)$
 RewriteRule .* - [E=HTTP_X_AUTHORIZATION:%1]
 
-# Route all requests to index.php (except existing files and test files)
-RewriteCond %{REQUEST_FILENAME} -f [OR]
-RewriteCond %{REQUEST_FILENAME} -d
-RewriteRule . - [L]
+# IMPORTANT: Route ALL requests to index.php (except existing files/directories)
+# This must come BEFORE the file/directory check to catch all routes
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteCond %{REQUEST_FILENAME} !-d
+RewriteRule ^(.*)$ index.php [QSA,L]
 
-# Exclude test files from routing
+# Exclude test files from routing (if they exist as files)
 RewriteCond %{REQUEST_URI} ^/api/(debug|test-headers|test-auth)\.php$ [OR]
 RewriteCond %{REQUEST_URI} ^/(debug|test-headers|test-auth)\.php$
+RewriteCond %{REQUEST_FILENAME} -f
 RewriteRule . - [L]
-
-# Route everything else to index.php
-RewriteRule ^(.*)$ index.php [QSA,L]
 
 # Serve uploads directly (allow direct access to uploaded files)
 RewriteCond %{REQUEST_URI} ^/api/uploads/
@@ -78,4 +77,3 @@ RewriteRule ^uploads/(.*)$ uploads/$1 [L]
 # Pass Authorization header through mod_rewrite
 RewriteCond %{HTTP:Authorization} .
 RewriteRule .* - [E=HTTP_AUTHORIZATION:%{HTTP:Authorization}]
-
