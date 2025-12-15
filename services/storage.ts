@@ -3,7 +3,19 @@ import { cacheManager } from '../utils/cache';
 import { cookieManager } from '../utils/cookies';
 
 // API Configuration - Uses environment variable in production
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001/api';
+// Note: api.menupi.com subdomain points directly to /api/ directory
+// So VITE_API_URL should be https://api.menupi.com (without /api suffix)
+// For localhost, we keep /api suffix for development
+const getApiUrl = () => {
+    const envUrl = import.meta.env.VITE_API_URL;
+    if (!envUrl) {
+        return 'http://localhost:3001/api'; // Local development
+    }
+    // If production URL already ends with /api, remove it (legacy config)
+    // Otherwise use as-is (correct config: https://api.menupi.com)
+    return envUrl.replace(/\/api\/?$/, '');
+};
+const API_URL = getApiUrl();
 
 // Helper to handle authentication errors
 const handleAuthError = (status: number) => {
