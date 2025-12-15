@@ -322,11 +322,24 @@ export const StorageService = {
           }
           const data = await res.json();
           
+          // Normalize media URLs in screen playlists
+          const normalizedScreens = data.map((screen: Screen) => {
+              if (screen.playlist && Array.isArray(screen.playlist)) {
+                  const normalizedPlaylist = screen.playlist.map((item: PlaylistItem) => {
+                      // Media URLs are in the media object, not directly in playlist items
+                      // But we need to normalize when media is accessed
+                      return item;
+                  });
+                  return { ...screen, playlist: normalizedPlaylist };
+              }
+              return screen;
+          });
+          
           // Cache for 2 minutes (screens change less frequently)
           // Convert milliseconds to days for cookie expiration (0.0014 days ≈ 2 minutes)
-          cacheManager.set('screens', data, 0.0014);
+          cacheManager.set('screens', normalizedScreens, 0.0014);
           
-          return data;
+          return normalizedScreens;
       } catch (e) {
           console.error(e);
           // Return cached data if available, even if expired
@@ -457,9 +470,31 @@ export const StorageService = {
           
           return normalizedData;
       } catch (e) {
-          // Return cached data if available
-          const cached = cacheManager.get<MediaItem[]>('media');
-          return cached || [];
+          // Return cached data if available, but normalize URLs in cached data too
+          const cached = cacheManager.get<MediaItem[]>(`media`);
+          if (cached) {
+              return cached.map((item: MediaItem) => {
+                  if (item.url && (item.url.includes('localhost:3000') || item.url.includes('localhost:3001') || item.url.includes('127.0.0.1'))) {
+                      try {
+                          const urlObj = new URL(item.url);
+                          const path = urlObj.pathname;
+                          const apiBaseUrl = API_URL.replace(/\/api\/?$/, '');
+                          const baseUrl = apiBaseUrl.startsWith('http') ? apiBaseUrl : `https://${apiBaseUrl}`;
+                          const cleanPath = path.startsWith('/') ? path : `/${path}`;
+                          return { ...item, url: `${baseUrl}${cleanPath}` };
+                      } catch (e) {
+                          const pathMatch = item.url.match(/\/(uploads\/.+)$/);
+                          if (pathMatch) {
+                              const apiBaseUrl = API_URL.replace(/\/api\/?$/, '');
+                              const baseUrl = apiBaseUrl.startsWith('http') ? apiBaseUrl : `https://${apiBaseUrl}`;
+                              return { ...item, url: `${baseUrl}/${pathMatch[1]}` };
+                          }
+                      }
+                  }
+                  return item;
+              });
+          }
+          return [];
       }
   },
 
