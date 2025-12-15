@@ -781,8 +781,16 @@ export const StorageService = {
       }
 
       try {
-          const res = await fetch(`${API_URL}/storage/breakdown`, { headers: getAuthHeaders() });
+          const headers = getAuthHeaders();
+          if (!headers['Authorization'] && !headers['X-Authorization']) {
+              console.error('No auth token available for storage breakdown');
+              return { image: 0, video: 0, pdf: 0, gif: 0, other: 0 };
+          }
+          
+          const res = await fetch(`${API_URL}/storage/breakdown`, { headers });
           if (!res.ok) {
+              const errorData = await res.json().catch(() => ({}));
+              console.error('Storage breakdown error:', res.status, errorData);
               if (handleAuthError(res.status)) {
                   return { image: 0, video: 0, pdf: 0, gif: 0, other: 0 };
               }
@@ -791,7 +799,6 @@ export const StorageService = {
           const data = await res.json();
           
           // Cache for 1 minute
-          // Cache for 1 minute (0.0007 days ≈ 1 minute)
           cacheManager.set('storage_breakdown', data, 0.0007);
           
           return data;
