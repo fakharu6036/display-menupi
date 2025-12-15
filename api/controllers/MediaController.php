@@ -75,7 +75,7 @@ class MediaController {
      */
     public function listMedia() {
         try {
-            $user = authenticate();
+            $user = authenticateToken();
             
             $rows = $this->db->fetchAll(
                 'SELECT * FROM media WHERE restaurant_id = ? ORDER BY created_at DESC',
