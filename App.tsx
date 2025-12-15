@@ -18,6 +18,7 @@ import Settings from './pages/Settings';
 import PublicPlayer from './pages/PublicPlayer';
 import TvLogin from './pages/TvLogin';
 import AdminDashboard from './pages/AdminDashboard';
+import TvSubdomainRoute from './components/TvSubdomainRoute';
 
 const ProtectedRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const isAuthenticated = !!localStorage.getItem('menupi_user');
@@ -110,6 +111,9 @@ const App: React.FC = () => {
           {/* Public Player Routes */}
           <Route path="/tv" element={<TvLogin />} />
           <Route path="/tv/:screenCode" element={<PublicPlayer />} />
+          
+          {/* TV Subdomain Route: tv.menupi.com/[code] */}
+          <Route path="/:screenCode" element={<TvSubdomainRoute />} />
         </Routes>
       </Layout>
     </BrowserRouter>

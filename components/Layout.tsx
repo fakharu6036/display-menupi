@@ -80,7 +80,32 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
   }, [location.pathname]);
 
   // Don't show layout on public pages, login, register, or admin dashboard (which has its own header and navigation)
-  if (location.pathname === '/login' || location.pathname === '/register' || location.pathname.startsWith('/display') || location.pathname.startsWith('/tv') || location.pathname.startsWith('/admin')) {
+  // Also hide layout on tv.menupi.com subdomain (root-level routes like /[code])
+  const isTvSubdomain = window.location.hostname === 'tv.menupi.com' || window.location.hostname.includes('tv.');
+  const pathname = location.pathname;
+  
+  // Check if this is a root-level code route on TV subdomain (e.g., /ABC123 on tv.menupi.com)
+  const isTvSubdomainCodeRoute = isTvSubdomain && 
+    pathname !== '/' && 
+    !pathname.startsWith('/tv') && 
+    !pathname.startsWith('/login') && 
+    !pathname.startsWith('/register') && 
+    !pathname.startsWith('/display') && 
+    !pathname.startsWith('/admin') && 
+    !pathname.startsWith('/dashboard') && 
+    !pathname.startsWith('/media') && 
+    !pathname.startsWith('/screens') && 
+    !pathname.startsWith('/schedules') && 
+    !pathname.startsWith('/settings') && 
+    !pathname.startsWith('/verify-email') &&
+    pathname.match(/^\/[A-Z0-9]{6,}$/); // Matches /ABC123 format (6+ alphanumeric chars)
+  
+  if (location.pathname === '/login' || 
+      location.pathname === '/register' || 
+      location.pathname.startsWith('/display') || 
+      location.pathname.startsWith('/tv') || 
+      location.pathname.startsWith('/admin') || 
+      isTvSubdomainCodeRoute) {
     return <>{children}</>;
   }
 
