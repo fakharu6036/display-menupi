@@ -7,11 +7,6 @@ require_once __DIR__ . '/../utils/upload.php';
 require_once __DIR__ . '/../config/config.php';
 require_once __DIR__ . '/../middleware/auth.php';
 
-// Alias for backward compatibility
-function authenticate() {
-    return authenticateToken();
-}
-
 class MediaController {
     private $db;
     
