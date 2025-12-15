@@ -294,7 +294,10 @@ export const StorageService = {
       }
 
       try {
-          const res = await fetch(`${API_URL}/screens`, { headers: getAuthHeaders() });
+          const headers = getAuthHeaders();
+          const token = headers['Authorization']?.replace('Bearer ', '') || headers['X-Authorization']?.replace('Bearer ', '');
+          const url = token ? `${API_URL}/screens?token=${encodeURIComponent(token)}` : `${API_URL}/screens`;
+          const res = await fetch(url, { headers });
           if (!res.ok) throw new Error('Failed to fetch screens');
           const data = await res.json();
           
