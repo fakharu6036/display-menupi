@@ -842,9 +842,13 @@ app.post('/api/media', authenticateToken, upload.single('file'), async (req, res
             duration = 30; // Default 30 seconds for videos
         }
 
+        // Store only the relative path (not full URL) in database
+        // This ensures files work regardless of server location
+        const relativePath = file.path.replace(/\\/g, '/').replace(/^.*\/uploads\//, 'uploads/');
+        
         const [result] = await pool.execute(
             'INSERT INTO media (user_id, restaurant_id, file_name, file_path, file_type, file_size_mb, source) VALUES (?, ?, ?, ?, ?, ?, ?)',
-            [req.user.id, req.user.restaurantId, file.originalname, file.path.replace(/\\/g, '/'), fileType, sizeMb, 'upload']
+            [req.user.id, req.user.restaurantId, file.originalname, relativePath, fileType, sizeMb, 'upload']
         );
 
         // Log activity: Media Uploaded
@@ -858,7 +862,16 @@ app.post('/api/media', authenticateToken, upload.single('file'), async (req, res
             console.warn('Could not log media upload activity:', logErr.message);
         }
 
-        res.json({ success: true, id: result.insertId, duration: duration });
+        // Return the correct production URL for the uploaded file
+        const baseUrl = getMediaBaseUrl(req);
+        const fileUrl = normalizeMediaUrl(relativePath, baseUrl);
+
+        res.json({ 
+            success: true, 
+            id: result.insertId, 
+            duration: duration,
+            url: fileUrl  // Return the correct URL immediately
+        });
     } catch (err) {
         // Clean up file if database insert fails
         if (req.file && fs.existsSync(req.file.path)) {
