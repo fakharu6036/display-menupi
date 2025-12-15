@@ -2,6 +2,13 @@
 
 Standalone backend API server for MENUPI Digital Signage Platform.
 
+## 🚀 Quick Start for Hostinger
+
+**See detailed guides:**
+- **[HOSTINGER_DEPLOYMENT.md](./HOSTINGER_DEPLOYMENT.md)** - Complete step-by-step guide
+- **[HOSTINGER_QUICK_START.md](./HOSTINGER_QUICK_START.md)** - 5-step quick guide
+- **[HOSTINGER_CHECKLIST.md](./HOSTINGER_CHECKLIST.md)** - Deployment checklist
+
 ## 📋 Requirements
 
 - Node.js 18+ 

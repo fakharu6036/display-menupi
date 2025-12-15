@@ -1,0 +1,29 @@
+# Hostinger .htaccess for Node.js API
+# This file helps with routing and security
+
+# Prevent directory listing
+Options -Indexes
+
+# Protect .env file
+<Files ".env">
+    Order allow,deny
+    Deny from all
+</Files>
+
+# Protect sensitive files
+<FilesMatch "\.(env|log|pid)$">
+    Order allow,deny
+    Deny from all
+</FilesMatch>
+
+# Allow CORS (if needed for preflight)
+<IfModule mod_headers.c>
+    Header set Access-Control-Allow-Origin "https://app.menupi.com"
+    Header set Access-Control-Allow-Origin "https://tv.menupi.com"
+    Header set Access-Control-Allow-Methods "GET, POST, PUT, DELETE, OPTIONS"
+    Header set Access-Control-Allow-Headers "Content-Type, Authorization"
+</IfModule>
+
+# Note: Hostinger Node.js apps typically handle routing automatically
+# This .htaccess is mainly for security and file protection
+
