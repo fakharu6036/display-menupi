@@ -2,12 +2,10 @@
 // Public Routes (No Auth Required)
 
 require_once __DIR__ . '/../utils/response.php';
-require_once __DIR__ . '/../controllers/PublicController.php';
 
 $path = $GLOBALS['path'] ?? $_SERVER['REQUEST_URI'];
-$publicController = new PublicController();
 
-// GET /api/ (root) - API information
+// GET /api/ (root) - API information (no database required)
 if ($_SERVER['REQUEST_METHOD'] === 'GET' && ($path === '/' || $path === '')) {
     successResponse([
         'name' => 'MENUPI API',
@@ -24,6 +22,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET' && ($path === '/' || $path === '')) {
     ]);
     exit;
 }
+
+// Load PublicController only when needed (requires database)
+require_once __DIR__ . '/../controllers/PublicController.php';
+$publicController = new PublicController();
 
 // GET /api/health
 if ($_SERVER['REQUEST_METHOD'] === 'GET' && $path === '/health') {
