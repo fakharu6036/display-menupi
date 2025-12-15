@@ -13,6 +13,40 @@ class AuthController {
         $this->db = Database::getInstance();
     }
     
+    /**
+     * Normalize media URL - fixes old localhost URLs
+     */
+    private function normalizeMediaUrl($url) {
+        if (empty($url)) {
+            return $url;
+        }
+        
+        $baseUrl = BASE_URL; // From config.php
+        
+        // If it's already a full URL, check if it needs to be rewritten
+        if (strpos($url, 'http://') === 0 || strpos($url, 'https://') === 0) {
+            // Rewrite localhost URLs to use the correct base URL
+            if (strpos($url, 'localhost:3000') !== false || 
+                strpos($url, 'localhost:3001') !== false || 
+                strpos($url, '127.0.0.1') !== false) {
+                
+                // Extract the path from the old URL
+                $parsed = parse_url($url);
+                $path = $parsed['path'] ?? '';
+                
+                // Construct new URL
+                $cleanPath = (substr($path, 0, 1) === '/') ? $path : '/' . $path;
+                return $baseUrl . $cleanPath;
+            }
+            // If it's already a proper production URL, return as-is
+            return $url;
+        }
+        
+        // If it's just a path, construct the full URL
+        $cleanPath = (substr($url, 0, 1) === '/') ? $url : '/' . $url;
+        return $baseUrl . $cleanPath;
+    }
+    
     public function login() {
         $data = json_decode(file_get_contents('php://input'), true);
         $email = $data['email'] ?? '';
