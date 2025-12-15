@@ -5,6 +5,19 @@ import { cookieManager } from '../utils/cookies';
 // API Configuration - Uses environment variable in production
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001/api';
 
+// Helper to handle authentication errors
+const handleAuthError = (status: number) => {
+    if (status === 401 || status === 403) {
+        localStorage.removeItem('menupi_user');
+        // Only redirect if not already on login page
+        if (!window.location.pathname.includes('/login')) {
+            window.location.href = '/login';
+        }
+        return true;
+    }
+    return false;
+};
+
 const getAuthHeaders = () => {
     const userStr = localStorage.getItem('menupi_user');
     if (!userStr) return {};
@@ -158,6 +171,9 @@ export const StorageService = {
           const url = token ? `${API_URL}/users/me/refresh?token=${encodeURIComponent(token)}` : `${API_URL}/users/me/refresh`;
           const res = await fetch(url, { headers });
           if (!res.ok) {
+              if (handleAuthError(res.status)) {
+                  throw new Error('Session expired. Please log in again.');
+              }
               throw new Error('Failed to refresh user data');
           }
           const updatedUser = await res.json();
@@ -298,7 +314,12 @@ export const StorageService = {
           const token = headers['Authorization']?.replace('Bearer ', '') || headers['X-Authorization']?.replace('Bearer ', '');
           const url = token ? `${API_URL}/screens?token=${encodeURIComponent(token)}` : `${API_URL}/screens`;
           const res = await fetch(url, { headers });
-          if (!res.ok) throw new Error('Failed to fetch screens');
+          if (!res.ok) {
+              if (handleAuthError(res.status)) {
+                  throw new Error('Session expired. Please log in again.');
+              }
+              throw new Error('Failed to fetch screens');
+          }
           const data = await res.json();
           
           // Cache for 2 minutes (screens change less frequently)
@@ -408,11 +429,33 @@ export const StorageService = {
           if (!res.ok) return [];
           const data = await res.json();
           
+          // Normalize URLs to fix localhost URLs from database
+          const normalizedData = data.map((item: MediaItem) => {
+              if (item.url && (item.url.includes('localhost:3000') || item.url.includes('localhost:3001') || item.url.includes('127.0.0.1'))) {
+                  try {
+                      const urlObj = new URL(item.url);
+                      const path = urlObj.pathname;
+                      const apiBaseUrl = API_URL.replace(/\/api\/?$/, '');
+                      const baseUrl = apiBaseUrl.startsWith('http') ? apiBaseUrl : `https://${apiBaseUrl}`;
+                      const cleanPath = path.startsWith('/') ? path : `/${path}`;
+                      return { ...item, url: `${baseUrl}${cleanPath}` };
+                  } catch (e) {
+                      const pathMatch = item.url.match(/\/(uploads\/.+)$/);
+                      if (pathMatch) {
+                          const apiBaseUrl = API_URL.replace(/\/api\/?$/, '');
+                          const baseUrl = apiBaseUrl.startsWith('http') ? apiBaseUrl : `https://${apiBaseUrl}`;
+                          return { ...item, url: `${baseUrl}/${pathMatch[1]}` };
+                      }
+                  }
+              }
+              return item;
+          });
+          
           // Cache for 3 minutes (media changes less frequently)
           // Convert milliseconds to days for cookie expiration (0.002 days ≈ 3 minutes)
-          cacheManager.set('media', data, 0.002);
+          cacheManager.set('media', normalizedData, 0.002);
           
-          return data;
+          return normalizedData;
       } catch (e) {
           // Return cached data if available
           const cached = cacheManager.get<MediaItem[]>('media');
@@ -651,7 +694,12 @@ export const StorageService = {
 
       try {
           const res = await fetch(`${API_URL}/storage/usage`, { headers: getAuthHeaders() });
-          if (!res.ok) return 0;
+          if (!res.ok) {
+              if (handleAuthError(res.status)) {
+                  return 0;
+              }
+              return 0;
+          }
           const data = await res.json();
           const usage = data.usedMB || 0;
           
@@ -679,7 +727,12 @@ export const StorageService = {
 
       try {
           const res = await fetch(`${API_URL}/storage/breakdown`, { headers: getAuthHeaders() });
-          if (!res.ok) return { image: 0, video: 0, pdf: 0, gif: 0, other: 0 };
+          if (!res.ok) {
+              if (handleAuthError(res.status)) {
+                  return { image: 0, video: 0, pdf: 0, gif: 0, other: 0 };
+              }
+              return { image: 0, video: 0, pdf: 0, gif: 0, other: 0 };
+          }
           const data = await res.json();
           
           // Cache for 1 minute
