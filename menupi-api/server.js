@@ -62,6 +62,21 @@ app.use(express.json({ limit: '50mb' }));
 app.use(express.urlencoded({ extended: true, limit: '50mb' }));
 app.use('/uploads', express.static('uploads'));
 
+// Root endpoint - API information
+app.get('/', (req, res) => {
+    res.json({
+        name: 'MENUPI Digital Signage API',
+        version: '1.0.0',
+        status: 'running',
+        endpoints: {
+            health: '/api/health',
+            login: '/api/login',
+            register: '/api/register'
+        },
+        timestamp: new Date().toISOString()
+    });
+});
+
 // Health check endpoint (public, no auth required)
 app.get('/api/health', async (req, res) => {
     try {
