@@ -1672,10 +1672,15 @@ app.post('/api/users/me/avatar', authenticateToken, upload.single('avatar'), asy
             }
         }
 
-        // Update user with new avatar path
-        const baseUrl = getMediaBaseUrl(req);
-        const avatarUrl = `${baseUrl}/${file.path.replace(/\\/g, '/')}`;
+        // Store only the relative path (not full URL) in database
+        const relativePath = file.path.replace(/\\/g, '/').replace(/^.*\/uploads\//, 'uploads/');
         
+        // Get the correct production URL for the avatar
+        const baseUrl = getMediaBaseUrl(req);
+        const avatarUrl = normalizeMediaUrl(relativePath, baseUrl);
+        
+        // Store the full URL in database (for backward compatibility with existing code)
+        // But new code should use relative paths and normalize on retrieval
         await pool.execute(
             'UPDATE users SET avatar_url = ? WHERE id = ?',
             [avatarUrl, req.user.id]
