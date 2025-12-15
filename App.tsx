@@ -37,6 +37,18 @@ const ProtectedAdminRoute: React.FC<{ children: React.ReactNode }> = ({ children
   return <>{children}</>;
 };
 
+// Root route handler - shows TvLogin on TV subdomain, redirects to dashboard on app subdomain
+const RootRoute: React.FC = () => {
+  const hostname = window.location.hostname;
+  const isTvSubdomain = hostname === 'tv.menupi.com' || hostname.includes('tv.');
+  
+  if (isTvSubdomain) {
+    return <TvLogin />;
+  }
+  
+  return <Navigate to="/dashboard" replace />;
+};
+
 const App: React.FC = () => {
   return (
     <BrowserRouter>
@@ -47,7 +59,7 @@ const App: React.FC = () => {
             <Route path="/register" element={<Register />} />
             <Route path="/verify-email" element={<VerifyEmail />} />
             
-            <Route path="/" element={<Navigate to="/dashboard" replace />} />
+            <Route path="/" element={<RootRoute />} />
             
             <Route path="/dashboard" element={
               <ProtectedRoute><Dashboard /></ProtectedRoute>

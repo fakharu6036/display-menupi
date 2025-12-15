@@ -6,11 +6,19 @@ import { Button } from '../components/Button';
 const TvLogin: React.FC = () => {
   const navigate = useNavigate();
   const [code, setCode] = useState('');
+  const hostname = window.location.hostname;
+  const isTvSubdomain = hostname === 'tv.menupi.com' || hostname.includes('tv.');
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (code.length >= 6) {
-      navigate(`/tv/${code.toUpperCase()}`);
+      const upperCode = code.toUpperCase();
+      // On TV subdomain, navigate to /[code], otherwise use /tv/[code]
+      if (isTvSubdomain) {
+        navigate(`/${upperCode}`);
+      } else {
+        navigate(`/tv/${upperCode}`);
+      }
     }
   };
 
@@ -24,8 +32,13 @@ const TvLogin: React.FC = () => {
                 </div>
                 <span className="text-xl font-black text-white tracking-tighter">MENUPI TV</span>
             </div>
-            <h1 className="text-2xl font-bold text-white">Connect Screen</h1>
-            <p className="text-slate-400 mt-2">Enter the 6-character code from your dashboard to start playback.</p>
+            <h1 className="text-2xl font-bold text-white">Enter Screen Code</h1>
+            <p className="text-slate-400 mt-2">
+              Enter your 6-character screen code to start displaying your digital menu on this screen.
+            </p>
+            <p className="text-slate-500 text-sm mt-3">
+              Find your screen code in the <span className="text-slate-400 font-medium">MENUPI Dashboard</span> under the Screens section.
+            </p>
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-8">

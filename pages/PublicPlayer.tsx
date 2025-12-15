@@ -233,16 +233,6 @@ const PublicPlayer: React.FC = () => {
                 }
                 return;
             }
-        } catch (err: any) {
-            // Handle network errors with better messages
-            if (err.message?.includes('Failed to fetch') || err.name === 'TypeError') {
-                setError(`Cannot connect to API. Please check if ${API_URL} is accessible.`);
-            } else {
-                setError(err.message || "Failed to load screen");
-            }
-            console.error('Error loading screen:', err);
-            return;
-        }
             
             const data = await res.json();
             
@@ -328,12 +318,16 @@ const PublicPlayer: React.FC = () => {
                 setError("No content available");
                 return;
             }
-        } catch (err) {
+        } catch (err: any) {
             console.error('Error refreshing playlist:', err);
-            // Don't set error on network failure - will retry silently
-            // Only set error if it's a persistent issue
-            if (playlist.length === 0) {
-                setError("Connection error. Retrying...");
+            // Handle network errors with better messages
+            if (err.message?.includes('Failed to fetch') || err.name === 'TypeError') {
+                if (playlist.length === 0) {
+                    setError(`Cannot connect to API at ${API_URL}. Please check your connection and API server status.`);
+                }
+                // Don't show error if we already have content - will retry silently
+            } else {
+                setError(err.message || "Failed to load screen");
             }
         }
     };

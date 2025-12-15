@@ -80,9 +80,12 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
   }, [location.pathname]);
 
   // Don't show layout on public pages, login, register, or admin dashboard (which has its own header and navigation)
-  // Also hide layout on tv.menupi.com subdomain (root-level routes like /[code])
+  // Also hide layout on tv.menupi.com subdomain (root path and root-level routes like /[code])
   const isTvSubdomain = window.location.hostname === 'tv.menupi.com' || window.location.hostname.includes('tv.');
   const pathname = location.pathname;
+  
+  // Check if this is the root path on TV subdomain (shows TvLogin)
+  const isTvSubdomainRoot = isTvSubdomain && pathname === '/';
   
   // Check if this is a root-level code route on TV subdomain (e.g., /ABC123 on tv.menupi.com)
   const isTvSubdomainCodeRoute = isTvSubdomain && 
@@ -105,6 +108,7 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
       location.pathname.startsWith('/display') || 
       location.pathname.startsWith('/tv') || 
       location.pathname.startsWith('/admin') || 
+      isTvSubdomainRoot ||
       isTvSubdomainCodeRoute) {
     return <>{children}</>;
   }
