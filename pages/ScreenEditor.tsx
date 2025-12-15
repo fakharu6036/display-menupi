@@ -388,7 +388,7 @@ const ScreenEditor: React.FC = () => {
                                  <div className="aspect-video bg-slate-100 relative overflow-hidden">
                                      {m.type === MediaType.IMAGE || m.type === MediaType.GIF ? (
                                          <img 
-                                             src={m.url} 
+                                             src={normalizeMediaUrl(m.url)} 
                                              alt={m.name} 
                                              className="w-full h-full object-cover"
                                          />

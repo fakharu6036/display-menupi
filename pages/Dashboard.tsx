@@ -5,6 +5,7 @@ import { Button } from '../components/Button';
 import { StorageService, PLAN_CONFIGS } from '../services/storage';
 import { Image, Monitor, Calendar, Upload, HardDrive, Crown, ChevronRight, PlayCircle, Plus, Activity, AlertTriangle, TrendingUp, TrendingDown, Clock, RefreshCw, FileVideo, FileText, Zap, BarChart3, ArrowUpRight, CheckCircle, XCircle, Eye, Settings, Sparkles, PieChart, Users, Target, Info, Lightbulb, ChevronDown, ChevronUp } from 'lucide-react';
 import { PlanType, Screen, Schedule, RepeatType, ActivityLog, MediaType } from '../types';
+import { normalizeMediaUrl } from '../utils/url';
 
 const Dashboard: React.FC = () => {
   const navigate = useNavigate();
@@ -613,7 +614,7 @@ const Dashboard: React.FC = () => {
                         </div>
                       ) : (
                         <img 
-                          src={firstMedia.url} 
+                          src={normalizeMediaUrl(firstMedia.url)} 
                           className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" 
                           alt={lastScreen.name}
                           onError={(e) => {

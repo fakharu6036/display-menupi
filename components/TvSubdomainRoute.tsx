@@ -19,6 +19,16 @@ const TvSubdomainRoute: React.FC = () => {
     return <PublicPlayer />;
   }
 
+  // If on TV subdomain but trying to access non-player routes, redirect to app subdomain
+  if (isTvSubdomain && !screenCode) {
+    // Redirect dashboard and other routes to app.menupi.com
+    const currentPath = window.location.pathname;
+    if (currentPath.startsWith('/dashboard') || currentPath.startsWith('/media') || currentPath.startsWith('/screens') || currentPath.startsWith('/settings') || currentPath.startsWith('/admin')) {
+      window.location.href = `https://app.menupi.com${currentPath}`;
+      return null;
+    }
+  }
+
   // Otherwise, redirect to dashboard (or show 404 for invalid routes)
   // This prevents random paths from showing the player on main domain
   if (screenCode && !isTvSubdomain) {
