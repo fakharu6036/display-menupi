@@ -740,8 +740,16 @@ export const StorageService = {
       }
 
       try {
-          const res = await fetch(`${API_URL}/storage/usage`, { headers: getAuthHeaders() });
+          const headers = getAuthHeaders();
+          if (!headers['Authorization'] && !headers['X-Authorization']) {
+              console.error('No auth token available for storage usage');
+              return 0;
+          }
+          
+          const res = await fetch(`${API_URL}/storage/usage`, { headers });
           if (!res.ok) {
+              const errorData = await res.json().catch(() => ({}));
+              console.error('Storage usage error:', res.status, errorData);
               if (handleAuthError(res.status)) {
                   return 0;
               }
