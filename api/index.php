@@ -7,8 +7,10 @@ if (getenv('NODE_ENV') !== 'production') {
     error_reporting(E_ALL);
     ini_set('display_errors', 1);
 } else {
-    error_reporting(0);
+    // Suppress warnings and notices in production, but log errors
+    error_reporting(E_ALL & ~E_WARNING & ~E_NOTICE & ~E_DEPRECATED);
     ini_set('display_errors', 0);
+    ini_set('log_errors', 1);
 }
 
 // Set timezone

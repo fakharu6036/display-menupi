@@ -9,13 +9,30 @@ function loadEnv($filePath) {
     
     $lines = file($filePath, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
     foreach ($lines as $line) {
-        if (strpos(trim($line), '#') === 0) {
+        // Skip comments and empty lines
+        $line = trim($line);
+        if (empty($line) || strpos($line, '#') === 0) {
             continue;
         }
         
-        list($name, $value) = explode('=', $line, 2);
-        $name = trim($name);
-        $value = trim($value);
+        // Check if line contains = sign
+        if (strpos($line, '=') === false) {
+            continue;
+        }
+        
+        // Split by = sign (max 2 parts: key=value)
+        $parts = explode('=', $line, 2);
+        if (count($parts) < 2) {
+            continue;
+        }
+        
+        $name = trim($parts[0]);
+        $value = trim($parts[1] ?? '');
+        
+        // Skip if name is empty
+        if (empty($name)) {
+            continue;
+        }
         
         if (!array_key_exists($name, $_SERVER) && !array_key_exists($name, $_ENV)) {
             putenv(sprintf('%s=%s', $name, $value));
