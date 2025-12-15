@@ -7,6 +7,7 @@ import { Modal } from '../components/Modal';
 import { Input, Select } from '../components/Input';
 import { PDFViewer } from '../components/PDFViewer';
 import { ArrowLeft, Plus, GripVertical, Trash2, Play, Pause, Settings, Tv, Smartphone, Minimize2, Maximize2, StretchHorizontal, AlertCircle, Timer, Repeat, Clock, FileText, SkipBack, SkipForward, Copy, Eye, EyeOff, Link as LinkIcon, Edit2, MoreVertical, X, Check, RotateCcw, Infinity } from 'lucide-react';
+import { normalizeMediaUrl } from '../utils/url';
 
 const ScreenEditor: React.FC = () => {
   const { screenId } = useParams<{ screenId: string }>();
@@ -166,7 +167,7 @@ const ScreenEditor: React.FC = () => {
       try {
         const video = document.createElement('video');
         video.preload = 'metadata';
-        video.src = media.url;
+        video.src = normalizeMediaUrl(media.url);
         await new Promise((resolve, reject) => {
           video.onloadedmetadata = () => {
             duration = Math.ceil(video.duration) || 30;
@@ -573,7 +574,7 @@ const ScreenEditor: React.FC = () => {
                              return (
                                  <video 
                                      key={`video-${currentItem.id}-${previewIndex}`}
-                                     src={media.url} 
+                                     src={normalizeMediaUrl(media.url)} 
                                      className="w-full h-full object-contain animate-fade-in"
                                      style={{ 
                                          maxWidth: '100%',
@@ -603,14 +604,14 @@ const ScreenEditor: React.FC = () => {
                                          maxHeight: '100%'
                                      }}
                                  >
-                                     <PDFViewer url={media.url} title={media.name} />
+                                     <PDFViewer url={normalizeMediaUrl(media.url)} title={media.name} />
                                  </div>
                              );
                          } else {
                              return (
                                  <img 
                                      key={`img-${currentItem.id}-${previewIndex}`}
-                                     src={media.url} 
+                                     src={normalizeMediaUrl(media.url)} 
                                      alt={media.name}
                                      className="w-full h-full object-contain animate-fade-in"
                                      style={{ 
@@ -809,7 +810,7 @@ const ScreenEditor: React.FC = () => {
                           <div className="bg-slate-50 rounded-lg p-3 mb-4">
                               <div className="flex items-center gap-3">
                                   {media.type === MediaType.IMAGE || media.type === MediaType.GIF ? (
-                                      <img src={media.url} alt={media.name} className="w-16 h-16 object-cover rounded" />
+                                      <img src={normalizeMediaUrl(media.url)} alt={media.name} className="w-16 h-16 object-cover rounded" />
                                   ) : media.type === MediaType.VIDEO ? (
                                       <div className="w-16 h-16 bg-slate-800 rounded flex items-center justify-center">
                                           <Tv className="w-8 h-8 text-white/50" />

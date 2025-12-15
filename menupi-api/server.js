@@ -62,6 +62,60 @@ app.use(express.json({ limit: '50mb' }));
 app.use(express.urlencoded({ extended: true, limit: '50mb' }));
 app.use('/uploads', express.static('uploads'));
 
+// Helper function to get the media base URL (for serving uploaded files)
+// Uses API_URL if set, otherwise constructs from request or defaults to localhost
+const getMediaBaseUrl = (req) => {
+    // Use API_URL environment variable if set (production)
+    if (process.env.API_URL) {
+        let apiUrl = process.env.API_URL.replace(/\/api\/?$/, ''); // Remove /api suffix if present
+        // Ensure it has a protocol
+        if (!apiUrl.startsWith('http://') && !apiUrl.startsWith('https://')) {
+            apiUrl = `https://${apiUrl}`;
+        }
+        return apiUrl;
+    }
+    
+    // In production, default to https://api.menupi.com
+    if (process.env.NODE_ENV === 'production') {
+        return 'https://api.menupi.com';
+    }
+    
+    // Development: use request protocol/host or default to localhost
+    if (req) {
+        // Check for X-Forwarded-Proto header (when behind proxy)
+        const protocol = req.get('x-forwarded-proto') || req.protocol || (req.secure ? 'https' : 'http');
+        const host = req.get('host') || req.get('x-forwarded-host') || `localhost:${process.env.PORT || 3001}`;
+        return `${protocol}://${host}`;
+    }
+    
+    // Fallback to localhost
+    return `http://localhost:${process.env.PORT || 3001}`;
+};
+
+// Helper function to normalize media URLs (fixes old localhost URLs in database)
+const normalizeMediaUrl = (url, baseUrl) => {
+    if (!url) return url;
+    
+    // If it's already a full URL, check if it needs to be rewritten
+    if (url.startsWith('http://') || url.startsWith('https://')) {
+        // Rewrite localhost URLs to use the correct base URL
+        if (url.includes('localhost:3000') || url.includes('localhost:3001') || url.includes('127.0.0.1')) {
+            // Extract the path from the old URL
+            const urlObj = new URL(url);
+            const path = urlObj.pathname;
+            // Remove leading slash if baseUrl already has trailing structure
+            const cleanPath = path.startsWith('/') ? path : `/${path}`;
+            return `${baseUrl}${cleanPath}`;
+        }
+        // If it's already a proper production URL, return as-is
+        return url;
+    }
+    
+    // If it's just a path, construct the full URL
+    const cleanPath = url.startsWith('/') ? url : `/${url}`;
+    return `${baseUrl}${cleanPath}`;
+};
+
 // Root endpoint - API information
 app.get('/', (req, res) => {
     res.json({
@@ -165,10 +219,18 @@ pool.on('error', (err) => {
 const authenticateToken = (req, res, next) => {
     const authHeader = req.headers['authorization'];
     const token = authHeader && authHeader.split(' ')[1];
-    if (!token) return res.sendStatus(401);
+    if (!token) {
+        console.log('No token provided');
+        return res.sendStatus(401);
+    }
 
     jwt.verify(token, process.env.JWT_SECRET || 'secret_key', async (err, user) => {
-        if (err) return res.sendStatus(403);
+        if (err) {
+            console.log('JWT verification failed:', err.message);
+            console.log('Token preview:', token.substring(0, 20) + '...');
+            console.log('JWT_SECRET set:', !!process.env.JWT_SECRET);
+            return res.status(403).json({ error: 'Invalid token', details: err.message });
+        }
         
         // Verify user and restaurant still exist and are active
         try {
@@ -734,7 +796,7 @@ app.get('/api/media', authenticateToken, async (req, res) => {
             [req.user.restaurantId]
         );
         
-        const baseUrl = process.env.FRONTEND_URL || `http://localhost:${process.env.PORT || 3001}`;
+        const baseUrl = getMediaBaseUrl(req);
         const media = rows.map(row => {
             // Convert MySQL datetime to JavaScript timestamp
             // MySQL returns dates - handle all possible formats
@@ -773,9 +835,19 @@ app.get('/api/media', authenticateToken, async (req, res) => {
                 createdAt = Date.now();
             }
             
+            // Normalize the URL to fix any old localhost URLs in the database
+            let mediaUrl;
+            if (row.source === 'upload') {
+                // Check if file_path is already a full URL or just a path
+                mediaUrl = normalizeMediaUrl(row.file_path, baseUrl);
+            } else {
+                // External URLs (YouTube, etc.) - return as-is
+                mediaUrl = row.file_path;
+            }
+            
             return {
                 id: row.id.toString(),
-                url: row.source === 'upload' ? `${baseUrl}/${row.file_path}` : row.file_path,
+                url: mediaUrl,
                 name: row.file_name,
                 type: row.file_type,
                 size: row.file_size_mb + ' MB',
@@ -959,7 +1031,7 @@ app.get('/api/public/screen/:code', async (req, res) => {
             [screen.restaurant_id]
         );
 
-        const baseUrl = process.env.FRONTEND_URL || `http://localhost:${process.env.PORT || 3001}`;
+        const baseUrl = getMediaBaseUrl(req);
         
         const playlist = playlistItems.map(item => ({
             id: item.id.toString(),
@@ -973,16 +1045,27 @@ app.get('/api/public/screen/:code', async (req, res) => {
             }
         }));
 
-        const media = mediaRows.map(row => ({
-            id: row.id.toString(),
-            url: row.source === 'upload' ? `${baseUrl}/${row.file_path}` : row.file_path,
-            name: row.file_name,
-            type: row.file_type,
-            size: row.file_size_mb + ' MB',
-            duration: 10,
-            createdAt: new Date(row.created_at).getTime(),
-            sourceProvider: row.source === 'upload' ? undefined : row.source
-        }));
+        const media = mediaRows.map(row => {
+            // Normalize the URL to fix any old localhost URLs in the database
+            let mediaUrl;
+            if (row.source === 'upload') {
+                mediaUrl = normalizeMediaUrl(row.file_path, baseUrl);
+            } else {
+                // External URLs (YouTube, etc.) - return as-is
+                mediaUrl = row.file_path;
+            }
+            
+            return {
+                id: row.id.toString(),
+                url: mediaUrl,
+                name: row.file_name,
+                type: row.file_type,
+                size: row.file_size_mb + ' MB',
+                duration: 10,
+                createdAt: new Date(row.created_at).getTime(),
+                sourceProvider: row.source === 'upload' ? undefined : row.source
+            };
+        });
 
         // Get updated_at timestamp (or use created_at if updated_at doesn't exist)
         const updatedAt = screen.updated_at ? new Date(screen.updated_at).getTime() : new Date(screen.created_at).getTime();
@@ -1626,7 +1709,7 @@ app.post('/api/users/me/avatar', authenticateToken, upload.single('avatar'), asy
         }
 
         // Update user with new avatar path
-        const baseUrl = process.env.FRONTEND_URL || `http://localhost:${process.env.PORT || 3001}`;
+        const baseUrl = getMediaBaseUrl(req);
         const avatarUrl = `${baseUrl}/${file.path.replace(/\\/g, '/')}`;
         
         await pool.execute(

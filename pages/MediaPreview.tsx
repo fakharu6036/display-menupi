@@ -6,6 +6,7 @@ import { Button } from '../components/Button';
 import { Card } from '../components/Card';
 import { PDFViewer } from '../components/PDFViewer';
 import { ArrowLeft, Trash2, Download, Cloud, RefreshCw } from 'lucide-react';
+import { normalizeMediaUrl } from '../utils/url';
 
 const MediaPreview: React.FC = () => {
   const { mediaId } = useParams<{ mediaId: string }>();
@@ -45,13 +46,13 @@ const MediaPreview: React.FC = () => {
       <div className="flex flex-col lg:flex-row gap-6">
         <div className="flex-1 bg-slate-900 flex items-center justify-center min-h-[500px] rounded-xl overflow-hidden">
             {media.type === MediaType.VIDEO ? (
-              <video src={media.url} controls className="w-full h-full max-h-[80vh] object-contain" />
+              <video src={normalizeMediaUrl(media.url)} controls className="w-full h-full max-h-[80vh] object-contain" />
             ) : media.type === MediaType.PDF ? (
               <div className="w-full h-full min-h-[500px] bg-white">
-                <PDFViewer url={media.url} title={media.name} />
+                <PDFViewer url={normalizeMediaUrl(media.url)} title={media.name} />
               </div>
             ) : (
-              <img src={media.url} alt={media.name} className="w-full h-full max-h-[80vh] object-contain" />
+              <img src={normalizeMediaUrl(media.url)} alt={media.name} className="w-full h-full max-h-[80vh] object-contain" />
             )}
         </div>
         <Card className="w-full lg:w-96 space-y-4 flex-shrink-0">

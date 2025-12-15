@@ -13,6 +13,7 @@ import {
     MoreHorizontal, FileText, Clock, Calendar, Check
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
+import { normalizeMediaUrl } from '../utils/url';
 
 // ... (ScreenModalPlayer and ScreenCardItem components can remain mostly same, simplified for brevity here but need to ensure props match)
 
@@ -40,7 +41,7 @@ const ScreenCardItem: React.FC<{
              <div className="relative aspect-video bg-gradient-to-br from-slate-900 to-slate-800 group cursor-pointer overflow-hidden flex-shrink-0" onClick={() => onPreview(screen)}>
                  {media ? (
                      <img 
-                         src={media.url} 
+                         src={normalizeMediaUrl(media.url)} 
                          className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" 
                          alt={screen.name}
                      />

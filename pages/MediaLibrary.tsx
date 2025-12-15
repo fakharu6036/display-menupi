@@ -6,6 +6,7 @@ import { Modal } from '../components/Modal';
 import { Input, Select } from '../components/Input';
 import { Upload, Trash2, Eye, Link as LinkIcon, FileVideo, Image, FileText, Check, AlertCircle, Lock, Copy, X, Monitor, Plus, Clock, Calendar, ArrowRight, ArrowLeft, Cloud, RefreshCw, HardDrive, Crown, Folder, Search, CheckSquare, Globe, Download, Filter, Grid3x3, List, SortAsc, SortDesc, MoreVertical, Info, Share2, Edit3, Star, StarOff, Tag, Layers } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
+import { normalizeMediaUrl } from '../utils/url';
 
 const MediaLibrary: React.FC = () => {
   const [media, setMedia] = useState<MediaItem[]>([]);
@@ -775,10 +776,10 @@ const MediaLibrary: React.FC = () => {
                 {/* Enhanced Thumbnail */}
                 <div className="aspect-square md:aspect-video bg-gradient-to-br from-slate-100 to-slate-200 relative overflow-hidden">
                   {item.type === MediaType.IMAGE || item.type === MediaType.GIF ? (
-                    <img src={item.url} alt={item.name} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" />
+                    <img src={normalizeMediaUrl(item.url)} alt={item.name} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" />
                   ) : item.type === MediaType.VIDEO ? (
                     <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-slate-900 to-slate-800 relative">
-                      <video src={item.url} className="w-full h-full object-cover opacity-70 group-hover:opacity-90 transition-opacity" muted />
+                      <video src={normalizeMediaUrl(item.url)} className="w-full h-full object-cover opacity-70 group-hover:opacity-90 transition-opacity" muted />
                       <div className="absolute inset-0 flex items-center justify-center">
                         <div className="w-16 h-16 rounded-full bg-white/20 backdrop-blur-sm flex items-center justify-center group-hover:bg-white/30 transition-colors">
                           <FileVideo className="w-8 h-8 text-white" />
@@ -899,7 +900,7 @@ const MediaLibrary: React.FC = () => {
                   {/* Thumbnail */}
                   <div className="w-20 h-20 rounded-lg overflow-hidden bg-slate-100 flex-shrink-0">
                     {item.type === MediaType.IMAGE || item.type === MediaType.GIF ? (
-                      <img src={item.url} alt={item.name} className="w-full h-full object-cover" />
+                      <img src={normalizeMediaUrl(item.url)} alt={item.name} className="w-full h-full object-cover" />
                     ) : item.type === MediaType.VIDEO ? (
                       <div className="w-full h-full flex items-center justify-center bg-slate-900">
                         <FileVideo className="w-8 h-8 text-white/50" />

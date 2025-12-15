@@ -1,8 +1,9 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { useParams } from 'react-router-dom';
 import { MediaItem, Screen, MediaType } from '../types';
-import { Maximize, Minimize, RefreshCw, QrCode } from 'lucide-react';
+import { Maximize, Minimize, RefreshCw, QrCode, Tv } from 'lucide-react';
 import { PDFViewer } from '../components/PDFViewer';
+import { normalizeMediaUrl } from '../utils/url';
 
 interface PlayerConfig {
     branding: boolean;
@@ -613,7 +614,7 @@ const PublicPlayer: React.FC = () => {
                     <video 
                         key={`video-${currentIndex}-${current.key}`}
                         ref={videoRef}
-                        src={current.media.url} 
+                        src={normalizeMediaUrl(current.media.url)} 
                         autoPlay 
                         muted 
                         playsInline
@@ -636,7 +637,7 @@ const PublicPlayer: React.FC = () => {
                 ) : current.media.type === MediaType.PDF ? (
                     <div key={`pdf-${currentIndex}-${current.key}`} className="w-full h-full bg-white animate-fade-in">
                         <PDFViewer 
-                            url={current.media.url} 
+                            url={normalizeMediaUrl(current.media.url)} 
                             title={current.media.name}
                             autoAdvance={true}
                             onError={() => {
@@ -648,7 +649,7 @@ const PublicPlayer: React.FC = () => {
                 ) : (
                     <img 
                         key={`img-${currentIndex}-${current.key}`}
-                        src={current.media.url} 
+                        src={normalizeMediaUrl(current.media.url)} 
                         alt={current.media.name}
                         className="w-full h-full object-contain animate-fade-in"
                         onError={() => {
