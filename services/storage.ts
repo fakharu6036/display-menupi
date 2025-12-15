@@ -11,6 +11,7 @@ const getAuthHeaders = () => {
     const user = JSON.parse(userStr);
     return {
         'Authorization': `Bearer ${user.token}`,
+        'X-Authorization': `Bearer ${user.token}`, // Fallback for LiteSpeed Cache
         'Content-Type': 'application/json'
     };
 };
