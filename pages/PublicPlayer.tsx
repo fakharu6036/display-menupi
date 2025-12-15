@@ -4,6 +4,7 @@ import { MediaItem, Screen, MediaType } from '../types';
 import { Maximize, Minimize, RefreshCw, QrCode, Tv } from 'lucide-react';
 import { PDFViewer } from '../components/PDFViewer';
 import { normalizeMediaUrl } from '../utils/url';
+import { apiUrl, getApiBaseUrl } from '../utils/apiUrl';
 
 interface PlayerConfig {
     branding: boolean;
@@ -31,7 +32,7 @@ const PublicPlayer: React.FC = () => {
     const videoRef = useRef<HTMLVideoElement>(null);
     const inactivityTimeoutRef = useRef<number | null>(null);
 
-    const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001/api';
+    const API_URL = getApiBaseUrl();
 
     // Auto-hide controls after inactivity
     const resetControlsTimeout = useCallback(() => {
@@ -221,7 +222,7 @@ const PublicPlayer: React.FC = () => {
     const refreshPlaylist = async (forceRefresh = false) => {
         if (!screenCode) return;
         try {
-            const res = await fetch(`${API_URL}/public/screen/${screenCode.toUpperCase()}`);
+            const res = await fetch(apiUrl(`/public/screen/${screenCode.toUpperCase()}`));
             
             if (!res.ok) {
                 if (res.status === 404) {
@@ -384,11 +385,11 @@ const PublicPlayer: React.FC = () => {
                 if (isUnload) {
                     // Use sendBeacon for unload (no response needed)
                     navigator.sendBeacon(
-                        `${API_URL}/screens/${screen.id}/ping`,
+                        apiUrl(`/screens/${screen.id}/ping`),
                         JSON.stringify(pingData)
                     );
                 } else {
-                    const response = await fetch(`${API_URL}/screens/${screen.id}/ping`, { 
+                    const response = await fetch(apiUrl(`/screens/${screen.id}/ping`), { 
                         method: 'POST',
                         headers: {
                             'Content-Type': 'application/json'
@@ -434,7 +435,7 @@ const PublicPlayer: React.FC = () => {
         // Also send ping on pagehide (more reliable on mobile)
         const handlePageHide = () => {
             try {
-                navigator.sendBeacon(`${API_URL}/screens/${screen.id}/ping`, '');
+                navigator.sendBeacon(apiUrl(`/screens/${screen.id}/ping`), '');
             } catch (e) {
                 // Silent fail
             }

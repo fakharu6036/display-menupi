@@ -1,50 +1,7 @@
 import { MediaItem, Screen, Schedule, PlanType, PlanLimits, User, ActivityLog, Invoice, PlaylistItem, PlaybackConfig, SystemSettings, UserRole } from '../types';
 import { cacheManager } from '../utils/cache';
 import { cookieManager } from '../utils/cookies';
-
-// API Configuration - Uses environment variable in production
-// Note: api.menupi.com subdomain points directly to /api/ directory
-// So VITE_API_URL should be https://api.menupi.com (without /api suffix)
-// For localhost, we keep /api suffix for development
-const getApiUrl = () => {
-    const envUrl = import.meta.env.VITE_API_URL;
-    if (!envUrl) {
-        return 'http://localhost:3001/api'; // Local development
-    }
-    // If production URL already ends with /api, remove it (legacy config)
-    // Otherwise use as-is (correct config: https://api.menupi.com)
-    return envUrl.replace(/\/api\/?$/, '');
-};
-const API_URL = getApiUrl();
-
-// Runtime URL sanitizer - fixes double /api/ prefix even with old cached bundles
-// This ensures URLs like https://api.menupi.com/api/screens become https://api.menupi.com/screens
-const sanitizeApiUrl = (url: string): string => {
-    // Fix double /api/ prefix: https://api.menupi.com/api/screens -> https://api.menupi.com/screens
-    // Pattern: https://api.menupi.com/api/anything -> https://api.menupi.com/anything
-    // More aggressive: catch any /api/api/ or /api/ after api.menupi.com
-    if (url.includes('api.menupi.com')) {
-        // Remove /api/ if it appears after the domain
-        url = url.replace(/(https?:\/\/api\.menupi\.com)\/api\//, '$1/');
-        // Also catch double /api/api/
-        url = url.replace(/\/api\/api\//g, '/api/');
-    }
-    return url;
-};
-
-// Helper to construct API URLs correctly
-// Since api.menupi.com subdomain points to /api/, we don't add /api/ to paths
-const apiUrl = (path: string): string => {
-    const cleanPath = path.startsWith('/') ? path : `/${path}`;
-    let fullUrl = `${API_URL}${cleanPath}`;
-    // Always sanitize to fix any double /api/ issues (works with old cached bundles too)
-    fullUrl = sanitizeApiUrl(fullUrl);
-    // Debug: Log if we're fixing a URL (helps identify old bundle issues)
-    if (fullUrl.includes('/api/') && fullUrl.includes('api.menupi.com')) {
-        console.warn('[apiUrl] Fixed double /api/ prefix:', fullUrl);
-    }
-    return fullUrl;
-};
+import { apiUrl, getApiBaseUrl, API_URL } from '../utils/apiUrl';
 
 // Helper to handle authentication errors
 const handleAuthError = (status: number) => {
