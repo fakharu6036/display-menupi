@@ -73,6 +73,8 @@ class AuthController {
                 $userWithAvatar = $this->db->fetchOne('SELECT avatar_url FROM users WHERE id = ?', [$user['id']]);
                 if ($userWithAvatar && isset($userWithAvatar['avatar_url'])) {
                     $avatarUrl = $userWithAvatar['avatar_url'];
+                    // Normalize avatar URL (fix localhost URLs)
+                    $avatarUrl = $this->normalizeMediaUrl($avatarUrl);
                 }
             } catch (Exception $e) {
                 // Column doesn't exist yet
