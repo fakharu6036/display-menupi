@@ -19,6 +19,7 @@ import PublicPlayer from './pages/PublicPlayer';
 import TvLogin from './pages/TvLogin';
 import AdminDashboard from './pages/AdminDashboard';
 import TvSubdomainRoute from './components/TvSubdomainRoute';
+import TvSubdomainGuard from './components/TvSubdomainGuard';
 
 const ProtectedRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const isAuthenticated = !!localStorage.getItem('menupi_user');
@@ -39,39 +40,40 @@ const ProtectedAdminRoute: React.FC<{ children: React.ReactNode }> = ({ children
 const App: React.FC = () => {
   return (
     <BrowserRouter>
-      <Layout>
-        <Routes>
-          <Route path="/login" element={<Login />} />
-          <Route path="/register" element={<Register />} />
-          <Route path="/verify-email" element={<VerifyEmail />} />
-          
-          <Route path="/" element={<Navigate to="/dashboard" replace />} />
-          
-          <Route path="/dashboard" element={
-            <ProtectedRoute><Dashboard /></ProtectedRoute>
-          } />
-          
-          <Route path="/media" element={
-            <ProtectedRoute><MediaLibrary /></ProtectedRoute>
-          } />
-          <Route path="/media/:mediaId" element={
-            <ProtectedRoute><MediaPreview /></ProtectedRoute>
-          } />
-          
-          <Route path="/screens" element={
-            <ProtectedRoute><Screens /></ProtectedRoute>
-          } />
-          <Route path="/screens/:screenId" element={
-            <ProtectedRoute><ScreenEditor /></ProtectedRoute>
-          } />
-          
-          <Route path="/schedules" element={
-            <ProtectedRoute><Schedules /></ProtectedRoute>
-          } />
-          
-          <Route path="/settings" element={
-            <ProtectedRoute><Settings /></ProtectedRoute>
-          } />
+      <TvSubdomainGuard>
+        <Layout>
+          <Routes>
+            <Route path="/login" element={<Login />} />
+            <Route path="/register" element={<Register />} />
+            <Route path="/verify-email" element={<VerifyEmail />} />
+            
+            <Route path="/" element={<Navigate to="/dashboard" replace />} />
+            
+            <Route path="/dashboard" element={
+              <ProtectedRoute><Dashboard /></ProtectedRoute>
+            } />
+            
+            <Route path="/media" element={
+              <ProtectedRoute><MediaLibrary /></ProtectedRoute>
+            } />
+            <Route path="/media/:mediaId" element={
+              <ProtectedRoute><MediaPreview /></ProtectedRoute>
+            } />
+            
+            <Route path="/screens" element={
+              <ProtectedRoute><Screens /></ProtectedRoute>
+            } />
+            <Route path="/screens/:screenId" element={
+              <ProtectedRoute><ScreenEditor /></ProtectedRoute>
+            } />
+            
+            <Route path="/schedules" element={
+              <ProtectedRoute><Schedules /></ProtectedRoute>
+            } />
+            
+            <Route path="/settings" element={
+              <ProtectedRoute><Settings /></ProtectedRoute>
+            } />
 
           {/* Admin Routes - All tabs have their own routes for bookmarking and navigation */}
           <Route path="/admin" element={
@@ -116,6 +118,7 @@ const App: React.FC = () => {
           <Route path="/:screenCode" element={<TvSubdomainRoute />} />
         </Routes>
       </Layout>
+      </TvSubdomainGuard>
     </BrowserRouter>
   );
 };
