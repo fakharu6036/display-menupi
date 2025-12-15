@@ -1,0 +1,81 @@
+# MENUPI API - Apache Configuration
+
+# Enable Rewrite Engine
+RewriteEngine On
+
+# Prevent directory listing
+Options -Indexes
+
+# Protect sensitive files
+<FilesMatch "\.(env|log|sql|md)$">
+    Order allow,deny
+    Deny from all
+</FilesMatch>
+
+# Protect .htaccess itself
+<Files ".htaccess">
+    Order allow,deny
+    Deny from all
+</Files>
+
+# Pass Authorization header through mod_rewrite (MUST be before other rules)
+# LiteSpeed Cache may strip Authorization, so we also try X-Authorization
+RewriteCond %{HTTP:Authorization} ^(.+)$
+RewriteRule .* - [E=HTTP_AUTHORIZATION:%1]
+
+RewriteCond %{HTTP:Authorization} ^(.+)$
+RewriteRule .* - [E=REDIRECT_HTTP_AUTHORIZATION:%1]
+
+# Also pass X-Authorization as fallback (LiteSpeed might allow this)
+RewriteCond %{HTTP:X-Authorization} ^(.+)$
+RewriteRule .* - [E=HTTP_X_AUTHORIZATION:%1]
+
+# Route all requests to index.php (except existing files and test files)
+RewriteCond %{REQUEST_FILENAME} -f [OR]
+RewriteCond %{REQUEST_FILENAME} -d
+RewriteRule . - [L]
+
+# Exclude test files from routing
+RewriteCond %{REQUEST_URI} ^/api/(debug|test-headers|test-auth)\.php$ [OR]
+RewriteCond %{REQUEST_URI} ^/(debug|test-headers|test-auth)\.php$
+RewriteRule . - [L]
+
+# Route everything else to index.php
+RewriteRule ^(.*)$ index.php [QSA,L]
+
+# Serve uploads directly (allow direct access to uploaded files)
+RewriteCond %{REQUEST_URI} ^/api/uploads/
+RewriteRule ^api/uploads/(.*)$ uploads/$1 [L]
+
+# Also handle uploads without /api prefix
+RewriteCond %{REQUEST_URI} ^/uploads/
+RewriteRule ^uploads/(.*)$ uploads/$1 [L]
+
+# Set PHP settings
+<IfModule mod_php7.c>
+    php_value upload_max_filesize 50M
+    php_value post_max_size 50M
+    php_value max_execution_time 300
+    php_value memory_limit 256M
+</IfModule>
+
+# Security headers
+<IfModule mod_headers.c>
+    Header set X-Content-Type-Options "nosniff"
+    Header set X-Frame-Options "DENY"
+    Header set X-XSS-Protection "1; mode=block"
+</IfModule>
+
+# Enable CORS for API (handled in PHP, but allow preflight)
+<IfModule mod_headers.c>
+    Header always set Access-Control-Allow-Methods "GET, POST, PUT, DELETE, OPTIONS"
+    Header always set Access-Control-Allow-Headers "Content-Type, Authorization, X-Authorization"
+    # Ensure Authorization header is passed through
+    RequestHeader set Authorization "expr=%{HTTP:Authorization}"
+    RequestHeader set X-Authorization "expr=%{HTTP:X-Authorization}"
+</IfModule>
+
+# Pass Authorization header through mod_rewrite
+RewriteCond %{HTTP:Authorization} .
+RewriteRule .* - [E=HTTP_AUTHORIZATION:%{HTTP:Authorization}]
+
