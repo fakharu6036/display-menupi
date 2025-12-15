@@ -153,7 +153,10 @@ export const StorageService = {
 
   refreshUserData: async (): Promise<User> => {
       try {
-          const res = await fetch(`${API_URL}/users/me/refresh`, { headers: getAuthHeaders() });
+          const headers = getAuthHeaders();
+          const token = headers['Authorization']?.replace('Bearer ', '') || headers['X-Authorization']?.replace('Bearer ', '');
+          const url = token ? `${API_URL}/users/me/refresh?token=${encodeURIComponent(token)}` : `${API_URL}/users/me/refresh`;
+          const res = await fetch(url, { headers });
           if (!res.ok) {
               throw new Error('Failed to refresh user data');
           }
