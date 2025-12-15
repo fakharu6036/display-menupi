@@ -7,6 +7,11 @@ require_once __DIR__ . '/../utils/upload.php';
 require_once __DIR__ . '/../config/config.php';
 require_once __DIR__ . '/../middleware/auth.php';
 
+// Alias for backward compatibility
+function authenticate() {
+    return authenticateToken();
+}
+
 class MediaController {
     private $db;
     
@@ -114,7 +119,7 @@ class MediaController {
      */
     public function uploadMedia() {
         try {
-            $user = authenticate();
+            $user = authenticateToken();
             
             if (!isset($_FILES['file']) || $_FILES['file']['error'] !== UPLOAD_ERR_OK) {
                 errorResponse('No file uploaded or file upload error', 400);
@@ -191,7 +196,7 @@ class MediaController {
      */
     public function deleteMedia($id) {
         try {
-            $user = authenticate();
+            $user = authenticateToken();
             
             // Get file path first
             $media = $this->db->fetchOne(
