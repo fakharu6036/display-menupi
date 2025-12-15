@@ -42,11 +42,19 @@ const RootRoute: React.FC = () => {
   const hostname = window.location.hostname;
   const isTvSubdomain = hostname === 'tv.menupi.com' || hostname.includes('tv.');
   
+  // On TV subdomain, always show TvLogin (screen code input)
   if (isTvSubdomain) {
     return <TvLogin />;
   }
   
-  return <Navigate to="/dashboard" replace />;
+  // On app subdomain, check if authenticated
+  const isAuthenticated = !!localStorage.getItem('menupi_user');
+  if (isAuthenticated) {
+    return <Navigate to="/dashboard" replace />;
+  }
+  
+  // Not authenticated on app subdomain, show login
+  return <Navigate to="/login" replace />;
 };
 
 const App: React.FC = () => {

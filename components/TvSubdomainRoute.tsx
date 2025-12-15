@@ -33,15 +33,13 @@ const TvSubdomainRoute: React.FC = () => {
     return <PublicPlayer />;
   }
 
-  // If on TV subdomain but no screen code, redirect to app subdomain
-  // (TvSubdomainGuard should handle most redirects, but this is a fallback)
+  // If on TV subdomain but no screen code, don't redirect
+  // The root path (/) should be handled by RootRoute, not this component
+  // This component only handles /[code] routes
   if (isTvSubdomain && !screenCode) {
-    const currentPath = window.location.pathname;
-    // Only allow root path and /tv paths on TV subdomain
-    if (currentPath !== '/' && !currentPath.startsWith('/tv')) {
-      window.location.href = `https://app.menupi.com${currentPath}`;
-      return null;
-    }
+    // This shouldn't happen if routes are ordered correctly
+    // But if it does, just return null (RootRoute will handle it)
+    return null;
   }
 
   // Otherwise, redirect to dashboard (or show 404 for invalid routes)
