@@ -728,7 +728,8 @@ export const StorageService = {
       try {
           const headers = getAuthHeaders();
           if (!headers['Authorization'] && !headers['X-Authorization']) {
-              console.error('No auth token available for storage usage');
+              // Silently return default when not logged in (expected behavior)
+              return 0;
               return 0;
           }
           
@@ -769,7 +770,8 @@ export const StorageService = {
       try {
           const headers = getAuthHeaders();
           if (!headers['Authorization'] && !headers['X-Authorization']) {
-              console.error('No auth token available for storage breakdown');
+              // Silently return default when not logged in (expected behavior)
+              return { image: 0, video: 0, pdf: 0, gif: 0, other: 0 };
               return { image: 0, video: 0, pdf: 0, gif: 0, other: 0 };
           }
           
