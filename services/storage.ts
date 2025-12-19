@@ -803,7 +803,6 @@ export const StorageService = {
           if (!headers['Authorization'] && !headers['X-Authorization']) {
               // Silently return default when not logged in (expected behavior)
               return { image: 0, video: 0, pdf: 0, gif: 0, other: 0 };
-              return { image: 0, video: 0, pdf: 0, gif: 0, other: 0 };
           }
           
           const res = await fetch(apiUrl('/storage/breakdown'), { headers });
