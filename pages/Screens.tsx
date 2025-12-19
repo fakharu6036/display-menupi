@@ -74,17 +74,6 @@ const ScreenCardItem: React.FC<{
                             <span className="text-xs font-mono font-bold text-indigo-600 bg-indigo-50 px-2 py-0.5 rounded">
                                 {screen.screenCode}
                             </span>
-                            <img 
-                                src={`https://api.qrserver.com/v1/create-qr-code/?size=60x60&data=${encodeURIComponent(publicUrl)}`}
-                                alt="QR Code"
-                                className="w-8 h-8 rounded border border-slate-200 bg-white p-0.5"
-                                title={`QR Code for ${publicUrl}`}
-                                onClick={(e) => {
-                                    e.stopPropagation();
-                                    onQr(screen);
-                                }}
-                                style={{ cursor: 'pointer' }}
-                            />
                         </div>
                      </div>
                  </div>
@@ -454,8 +443,20 @@ const Screens: React.FC = () => {
                          {qrScreen.screenCode}
                      </div>
                      <p className="text-sm text-slate-600 mb-2">Enter this code on your TV display</p>
+                     <p className="text-xs text-slate-500 mb-6">
+                         Go to <strong>tv.menupi.com</strong> on your TV browser and enter this code
+                     </p>
+                     {/* QR Code */}
+                     <div className="flex justify-center mb-4">
+                         <img 
+                             src={`https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(`https://tv.menupi.com/${qrScreen.screenCode}`)}`}
+                             alt="QR Code"
+                             className="w-48 h-48 rounded-lg border-2 border-slate-200 bg-white p-2 shadow-sm"
+                             title={`QR Code for https://tv.menupi.com/${qrScreen.screenCode}`}
+                         />
+                     </div>
                      <p className="text-xs text-slate-500">
-                         Go to <strong>/tv</strong> on your TV browser and enter this code
+                         Scan QR code to open player directly
                      </p>
                  </div>
                  <div className="flex gap-3">
@@ -468,6 +469,16 @@ const Screens: React.FC = () => {
                          className="flex-1"
                      >
                          <Copy className="w-4 h-4 mr-2" /> Copy Code
+                     </Button>
+                     <Button 
+                         onClick={() => {
+                             navigator.clipboard.writeText(`https://tv.menupi.com/${qrScreen.screenCode}`);
+                             showToast('Link copied to clipboard', 'success');
+                         }}
+                         variant="secondary"
+                         className="flex-1"
+                     >
+                         <LinkIcon className="w-4 h-4 mr-2" /> Copy Link
                      </Button>
                      <Button 
                          onClick={() => window.open(`https://tv.menupi.com/${qrScreen.screenCode}`, '_blank')}
