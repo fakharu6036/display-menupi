@@ -105,15 +105,19 @@ export const StorageService = {
           throw error;
       }
       
-      const data = await res.json();
+      const response = await res.json();
+      
+      // Backend wraps response in 'data' key: { success: true, data: { token, user } }
+      // Handle both formats for compatibility
+      const data = response.data || response;
       
       // Validate response structure
       if (!data.token) {
-          console.error('Login response missing token:', data);
+          console.error('Login response missing token. Response:', response, 'Data:', data);
           throw new Error('Login failed: No token received from server');
       }
       if (!data.user) {
-          console.error('Login response missing user:', data);
+          console.error('Login response missing user. Response:', response, 'Data:', data);
           throw new Error('Login failed: No user data received from server');
       }
       
@@ -149,7 +153,9 @@ export const StorageService = {
           throw new Error(err.error || 'Google login failed');
       }
 
-      const data = await res.json();
+      const response = await res.json();
+      // Backend wraps response in 'data' key: { success: true, data: { token, user } }
+      const data = response.data || response;
       const userWithToken = { ...data.user, token: data.token };
       localStorage.setItem('menupi_user', JSON.stringify(userWithToken));
       
@@ -249,7 +255,9 @@ export const StorageService = {
               throw new Error('Failed to refresh user data');
           }
           
-          const updatedUser = await res.json();
+          const response = await res.json();
+          // Backend wraps response in 'data' key, but refresh endpoint might return user directly
+          const updatedUser = response.data || response;
           const currentUser = StorageService.getUser();
           const newUser = { ...currentUser, ...updatedUser, token: currentUser?.token };
           localStorage.setItem('menupi_user', JSON.stringify(newUser));
