@@ -1036,7 +1036,7 @@ const MediaLibrary: React.FC = () => {
                      <Button type="submit">Search</Button>
                      <div className="grid grid-cols-2 gap-2">
                         {stockResults.map(r => (
-                            <img key={r.id} src={r.url} className="w-full h-20 object-cover cursor-pointer" onClick={() => handleImportStock(r.url)} />
+                            <img key={r.id} src={normalizeMediaUrl(r.url)} className="w-full h-20 object-cover cursor-pointer" onClick={() => handleImportStock(r.url)} />
                         ))}
                      </div>
                  </form>
