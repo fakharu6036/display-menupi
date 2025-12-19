@@ -457,7 +457,9 @@ export const StorageService = {
           // Public endpoint - no auth required for TV player
           const res = await fetch(apiUrl(`/public/screen/${code}`));
           if (res.ok) {
-              const data = await res.json();
+              const response = await res.json();
+              // Backend wraps response in 'data' key: { success: true, data: {...} }
+              const data = response.data || response;
               // Transform response to match Screen interface
               return {
                   id: data.id,
