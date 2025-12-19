@@ -762,7 +762,6 @@ export const StorageService = {
           if (!headers['Authorization'] && !headers['X-Authorization']) {
               // Silently return default when not logged in (expected behavior)
               return 0;
-              return 0;
           }
           
           const res = await fetch(apiUrl('/storage/usage'), { headers });
