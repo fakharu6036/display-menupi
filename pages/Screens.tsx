@@ -29,7 +29,8 @@ const ScreenCardItem: React.FC<{
   navigate: (path: string) => void;
 }> = ({ screen, mediaMap, canCreate, onDuplicate, onDelete, onQr, onPreview, onSchedule, navigate }) => {
     const media = screen.playlist[0] ? mediaMap[screen.playlist[0].mediaId] : null;
-    const publicUrl = `${window.location.origin}/tv/${screen.screenCode}`;
+    // Use tv.menupi.com subdomain for public player links
+    const publicUrl = `https://tv.menupi.com/${screen.screenCode}`;
     
     const handleCopyLink = (e: React.MouseEvent) => {
         e.stopPropagation();
