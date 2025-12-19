@@ -17,6 +17,7 @@ import App from './App';
         // This pattern catches all double /api/ prefixes
         if (url.includes('api.menupi.com')) {
             // Remove /api/ if it appears after api.menupi.com
+            // Use global flag to replace all occurrences
             const fixed = url.replace(/(https?:\/\/api\.menupi\.com)\/api\//g, '$1/');
             if (fixed !== url) {
                 console.warn('[Fetch Interceptor] Fixed URL:', url, '→', fixed);
@@ -25,6 +26,9 @@ import App from './App';
         }
         return url;
     };
+    
+    // Log that interceptor is active
+    console.log('[Fetch Interceptor] Active - Will fix double /api/ prefix for api.menupi.com');
     
     window.fetch = function(input: RequestInfo | URL, init?: RequestInit): Promise<Response> {
         let url: string = '';
