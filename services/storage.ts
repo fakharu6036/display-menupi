@@ -551,14 +551,24 @@ export const StorageService = {
           }
           
           // Normalize URLs to fix localhost URLs from database
-          // Use the normalizeMediaUrl utility for consistency
+          // Check for all localhost variations and normalize them
           const normalizedData = data.map((item: MediaItem) => {
-              if (item.url) {
-                  // Import normalizeMediaUrl dynamically to avoid circular dependency
-                  const { normalizeMediaUrl } = require('../utils/url');
-                  const normalizedUrl = normalizeMediaUrl(item.url);
-                  if (normalizedUrl !== item.url) {
-                      return { ...item, url: normalizedUrl };
+              if (item.url && (item.url.includes('localhost') || item.url.includes('127.0.0.1') || 
+                  item.url.startsWith('http://localhost') || item.url.startsWith('http://127.0.0.1'))) {
+                  try {
+                      const urlObj = new URL(item.url);
+                      const path = urlObj.pathname;
+                      const apiBaseUrl = getApiBaseUrl();
+                      const baseUrl = apiBaseUrl.startsWith('http') ? apiBaseUrl : `https://${apiBaseUrl}`;
+                      const cleanPath = path.startsWith('/') ? path : `/${path}`;
+                      return { ...item, url: `${baseUrl}${cleanPath}` };
+                  } catch (e) {
+                      const pathMatch = item.url.match(/\/(uploads\/.+)$/);
+                      if (pathMatch) {
+                          const apiBaseUrl = getApiBaseUrl();
+                          const baseUrl = apiBaseUrl.startsWith('http') ? apiBaseUrl : `https://${apiBaseUrl}`;
+                          return { ...item, url: `${baseUrl}/${pathMatch[1]}` };
+                      }
                   }
               }
               return item;
