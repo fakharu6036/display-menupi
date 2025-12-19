@@ -225,6 +225,21 @@ export const StorageService = {
                   }
               } else {
                   // Other errors (403, 500, etc.) - don't logout, just return cached user
+                  // Check error message - if it says "Invalid or expired token", treat as 401
+                  try {
+                      const errorData = await res.json();
+                      if (errorData.error && errorData.error.includes('Invalid or expired token')) {
+                          // This is actually a token issue, but don't logout immediately
+                          // Return cached user and let the user try again
+                          console.warn('Token appears invalid, but keeping user logged in:', errorData.error);
+                          const currentUser = StorageService.getUser();
+                          if (currentUser) {
+                              return currentUser;
+                          }
+                      }
+                  } catch (e) {
+                      // Couldn't parse error, continue
+                  }
                   console.warn('Failed to refresh user data:', res.status, res.statusText);
                   const currentUser = StorageService.getUser();
                   if (currentUser) {
