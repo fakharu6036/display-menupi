@@ -106,8 +106,30 @@ export const StorageService = {
       }
       
       const data = await res.json();
+      
+      // Validate response structure
+      if (!data.token) {
+          console.error('Login response missing token:', data);
+          throw new Error('Login failed: No token received from server');
+      }
+      if (!data.user) {
+          console.error('Login response missing user:', data);
+          throw new Error('Login failed: No user data received from server');
+      }
+      
       const userWithToken = { ...data.user, token: data.token };
       localStorage.setItem('menupi_user', JSON.stringify(userWithToken));
+      
+      // Verify token was stored correctly
+      const stored = localStorage.getItem('menupi_user');
+      if (stored) {
+          const parsed = JSON.parse(stored);
+          if (!parsed.token || parsed.token === 'undefined') {
+              console.error('Token not stored correctly after login. Stored:', parsed);
+              localStorage.removeItem('menupi_user');
+              throw new Error('Login failed: Token storage error');
+          }
+      }
       
       // Clear cache on login (new user session)
       cacheManager.clearAll();
