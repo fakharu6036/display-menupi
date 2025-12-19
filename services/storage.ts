@@ -412,7 +412,14 @@ export const StorageService = {
               }
               throw new Error('Failed to fetch screens');
           }
-          const data = await res.json();
+          const response = await res.json();
+          // Backend wraps response in 'data' key: { success: true, data: [...] }
+          const data = response.data || response;
+          // Ensure data is an array
+          if (!Array.isArray(data)) {
+              console.error('Screens response is not an array:', response);
+              return [];
+          }
           
           // Normalize media URLs in screen playlists
           const normalizedScreens = data.map((screen: Screen) => {
@@ -532,7 +539,14 @@ export const StorageService = {
       try {
           const res = await fetch(apiUrl('/media'), { headers: getAuthHeaders() });
           if (!res.ok) return [];
-          const data = await res.json();
+          const response = await res.json();
+          // Backend wraps response in 'data' key: { success: true, data: [...] }
+          const data = response.data || response;
+          // Ensure data is an array
+          if (!Array.isArray(data)) {
+              console.error('Media response is not an array:', response);
+              return [];
+          }
           
           // Normalize URLs to fix localhost URLs from database
           const normalizedData = data.map((item: MediaItem) => {
