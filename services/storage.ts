@@ -23,12 +23,22 @@ const handleAuthError = (status: number) => {
 const getAuthHeaders = () => {
     const userStr = localStorage.getItem('menupi_user');
     if (!userStr) return {};
-    const user = JSON.parse(userStr);
-    return {
-        'Authorization': `Bearer ${user.token}`,
-        'X-Authorization': `Bearer ${user.token}`, // Fallback for LiteSpeed Cache
-        'Content-Type': 'application/json'
-    };
+    try {
+        const user = JSON.parse(userStr);
+        // Check if token exists and is valid
+        if (!user || !user.token) {
+            console.warn('No token found in user object:', user);
+            return {};
+        }
+        return {
+            'Authorization': `Bearer ${user.token}`,
+            'X-Authorization': `Bearer ${user.token}`, // Fallback for LiteSpeed Cache
+            'Content-Type': 'application/json'
+        };
+    } catch (e) {
+        console.error('Failed to parse user from localStorage:', e);
+        return {};
+    }
 };
 
 export const PLAN_CONFIGS: Record<PlanType, PlanLimits> = {
@@ -179,7 +189,8 @@ export const StorageService = {
           }
           
           const token = headers['Authorization']?.replace('Bearer ', '') || headers['X-Authorization']?.replace('Bearer ', '');
-          const url = token ? `${apiUrl('/users/me/refresh')}?token=${encodeURIComponent(token)}` : apiUrl('/users/me/refresh');
+          // Only add token to URL if it exists and is not undefined
+          const url = (token && token !== 'undefined') ? `${apiUrl('/users/me/refresh')}?token=${encodeURIComponent(token)}` : apiUrl('/users/me/refresh');
           const res = await fetch(url, { headers });
           
           if (!res.ok) {
