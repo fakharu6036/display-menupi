@@ -1895,7 +1895,7 @@ const AdminDashboard: React.FC = () => {
                                                                                 showToast('Screen code not available', 'error');
                                                                                 return;
                                                                             }
-                                                                            const publicUrl = `${window.location.origin}/tv/${screenCode}`;
+                                                                            const publicUrl = `https://tv.menupi.com/${screenCode}`;
                                                                             window.open(publicUrl, '_blank');
                                                                             showToast('Opening public player in new tab', 'info');
                                                                         }}

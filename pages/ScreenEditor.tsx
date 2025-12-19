@@ -699,14 +699,14 @@ const ScreenEditor: React.FC = () => {
                      <div className="flex items-center gap-2">
                          <input
                              type="text"
-                             value={`${window.location.origin}/tv/${screen.screenCode}`}
+                             value={`https://tv.menupi.com/${screen.screenCode}`}
                              readOnly
                              className="flex-1 text-xs font-mono text-white bg-white/10 px-2 py-1 rounded border border-white/20"
                              onClick={(e) => e.currentTarget.select()}
                          />
                          <button
                              onClick={() => {
-                                 navigator.clipboard.writeText(`${window.location.origin}/tv/${screen.screenCode}`);
+                                 navigator.clipboard.writeText(`https://tv.menupi.com/${screen.screenCode}`);
                                  alert('Link copied!');
                              }}
                              className="p-1.5 bg-white/20 hover:bg-white/30 rounded transition-colors"

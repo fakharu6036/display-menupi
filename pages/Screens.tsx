@@ -459,7 +459,7 @@ const Screens: React.FC = () => {
                          <Copy className="w-4 h-4 mr-2" /> Copy Code
                      </Button>
                      <Button 
-                         onClick={() => window.open(`/tv/${qrScreen.screenCode}`, '_blank')}
+                         onClick={() => window.open(`https://tv.menupi.com/${qrScreen.screenCode}`, '_blank')}
                          className="flex-1"
                      >
                          <ExternalLink className="w-4 h-4 mr-2" /> Open Player
