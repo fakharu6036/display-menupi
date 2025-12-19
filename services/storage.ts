@@ -177,14 +177,16 @@ export const StorageService = {
           throw new Error(err.error || 'Registration failed');
       }
 
-      const data = await res.json();
+      const response = await res.json();
+      // Backend wraps response in 'data' key: { success: true, data: { token, user } }
+      const data = response.data || response;
       
       // New registration flow: returns success message and verification link
       // Don't auto-login, user needs to verify email first
-      if (data.success) {
+      if (response.success && !data.token) {
           return {
               success: true,
-              message: data.message,
+              message: response.message || data.message,
               verificationLink: data.verificationLink // Only in development
           };
       }
