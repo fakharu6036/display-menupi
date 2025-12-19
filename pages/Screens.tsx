@@ -74,6 +74,17 @@ const ScreenCardItem: React.FC<{
                             <span className="text-xs font-mono font-bold text-indigo-600 bg-indigo-50 px-2 py-0.5 rounded">
                                 {screen.screenCode}
                             </span>
+                            <img 
+                                src={`https://api.qrserver.com/v1/create-qr-code/?size=60x60&data=${encodeURIComponent(publicUrl)}`}
+                                alt="QR Code"
+                                className="w-8 h-8 rounded border border-slate-200 bg-white p-0.5"
+                                title={`QR Code for ${publicUrl}`}
+                                onClick={(e) => {
+                                    e.stopPropagation();
+                                    onQr(screen);
+                                }}
+                                style={{ cursor: 'pointer' }}
+                            />
                         </div>
                      </div>
                  </div>
