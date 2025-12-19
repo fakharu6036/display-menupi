@@ -850,15 +850,33 @@ export const StorageService = {
           
           const res = await fetch(apiUrl('/storage/usage'), { headers });
           if (!res.ok) {
-              const errorData = await res.json().catch(() => ({}));
-              console.error('Storage usage error:', res.status, errorData);
+              // Check if response is JSON before parsing
+              const contentType = res.headers.get('content-type');
+              if (contentType && contentType.includes('application/json')) {
+                  const errorData = await res.json().catch(() => ({}));
+                  console.error('Storage usage error:', res.status, errorData);
+              } else {
+                  // HTML response (PHP warnings) - log but don't parse
+                  const text = await res.text().catch(() => '');
+                  console.error('Storage usage error (HTML response):', res.status, text.substring(0, 200));
+              }
               if (handleAuthError(res.status)) {
                   return 0;
               }
               return 0;
           }
-          const data = await res.json();
-          const usage = data.usedMB || 0;
+          // Check if response is JSON before parsing
+          const contentType = res.headers.get('content-type');
+          if (!contentType || !contentType.includes('application/json')) {
+              // HTML response (PHP warnings) - return default
+              const text = await res.text().catch(() => '');
+              console.error('Storage usage returned HTML instead of JSON:', text.substring(0, 200));
+              return 0;
+          }
+          const response = await res.json();
+          // Backend wraps response in 'data' key: { success: true, data: {...} }
+          const data = response.data || response;
+          const usage = data.usedMB || data.used || 0;
           
           // Cache for 1 minute (storage changes when media is uploaded/deleted)
           // Cache for 1 minute (0.0007 days ≈ 1 minute)
@@ -891,14 +909,32 @@ export const StorageService = {
           
           const res = await fetch(apiUrl('/storage/breakdown'), { headers });
           if (!res.ok) {
-              const errorData = await res.json().catch(() => ({}));
-              console.error('Storage breakdown error:', res.status, errorData);
+              // Check if response is JSON before parsing
+              const contentType = res.headers.get('content-type');
+              if (contentType && contentType.includes('application/json')) {
+                  const errorData = await res.json().catch(() => ({}));
+                  console.error('Storage breakdown error:', res.status, errorData);
+              } else {
+                  // HTML response (PHP warnings) - log but don't parse
+                  const text = await res.text().catch(() => '');
+                  console.error('Storage breakdown error (HTML response):', res.status, text.substring(0, 200));
+              }
               if (handleAuthError(res.status)) {
                   return { image: 0, video: 0, pdf: 0, gif: 0, other: 0 };
               }
               return { image: 0, video: 0, pdf: 0, gif: 0, other: 0 };
           }
-          const data = await res.json();
+          // Check if response is JSON before parsing
+          const contentType = res.headers.get('content-type');
+          if (!contentType || !contentType.includes('application/json')) {
+              // HTML response (PHP warnings) - return default
+              const text = await res.text().catch(() => '');
+              console.error('Storage breakdown returned HTML instead of JSON:', text.substring(0, 200));
+              return { image: 0, video: 0, pdf: 0, gif: 0, other: 0 };
+          }
+          const response = await res.json();
+          // Backend wraps response in 'data' key: { success: true, data: {...} }
+          const data = response.data || response;
           
           // Cache for 1 minute
           cacheManager.set('storage_breakdown', data, 0.0007);
