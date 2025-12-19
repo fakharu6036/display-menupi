@@ -692,7 +692,13 @@ export const StorageService = {
       try {
           const res = await fetch(apiUrl('/schedules'), { headers: getAuthHeaders() });
           if (!res.ok) return [];
-          const data = await res.json();
+          const response = await res.json();
+          // Backend wraps response in 'data' key: { success: true, data: [...] }
+          const data = response.data || response;
+          // Ensure data is an array
+          if (!Array.isArray(data)) {
+              return [];
+          }
           
           // Cache for 2 minutes
           // Cache for 2 minutes (0.0014 days ≈ 2 minutes)
