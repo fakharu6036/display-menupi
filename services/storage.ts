@@ -165,24 +165,56 @@ export const StorageService = {
   refreshUserData: async (): Promise<User> => {
       try {
           const headers = getAuthHeaders();
+          // If no auth token, return current user (don't make API call)
+          if (!headers['Authorization'] && !headers['X-Authorization']) {
+              const currentUser = StorageService.getUser();
+              if (currentUser) {
+                  return currentUser;
+              }
+              throw new Error('No user session');
+          }
+          
           const token = headers['Authorization']?.replace('Bearer ', '') || headers['X-Authorization']?.replace('Bearer ', '');
           const url = token ? `${apiUrl('/users/me/refresh')}?token=${encodeURIComponent(token)}` : apiUrl('/users/me/refresh');
           const res = await fetch(url, { headers });
+          
           if (!res.ok) {
-              if (handleAuthError(res.status)) {
-                  throw new Error('Session expired. Please log in again.');
+              // Only logout on 401 (unauthorized) - token is definitely invalid
+              // For 403 (forbidden) or other errors, keep the user logged in
+              if (res.status === 401) {
+                  // Token is invalid, logout
+                  if (handleAuthError(res.status)) {
+                      throw new Error('Session expired. Please log in again.');
+                  }
+              } else {
+                  // Other errors (403, 500, etc.) - don't logout, just return cached user
+                  console.warn('Failed to refresh user data:', res.status, res.statusText);
+                  const currentUser = StorageService.getUser();
+                  if (currentUser) {
+                      return currentUser; // Return cached user instead of logging out
+                  }
               }
               throw new Error('Failed to refresh user data');
           }
+          
           const updatedUser = await res.json();
           const currentUser = StorageService.getUser();
           const newUser = { ...currentUser, ...updatedUser, token: currentUser?.token };
           localStorage.setItem('menupi_user', JSON.stringify(newUser));
           window.dispatchEvent(new Event('menupi-user-updated'));
           return newUser;
-      } catch (e) {
+      } catch (e: any) {
+          // If error is about session expiry, let it propagate (will trigger logout)
+          if (e.message && e.message.includes('Session expired')) {
+              throw e;
+          }
+          // For other errors, return cached user instead of logging out
           console.error('Failed to refresh user data:', e);
-          return StorageService.getUser();
+          const currentUser = StorageService.getUser();
+          if (currentUser) {
+              return currentUser; // Return cached user if refresh fails
+          }
+          throw e;
       }
   },
 
