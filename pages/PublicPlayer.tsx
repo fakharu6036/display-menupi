@@ -235,7 +235,9 @@ const PublicPlayer: React.FC = () => {
                 return;
             }
             
-            const data = await res.json();
+            const response = await res.json();
+            // Backend wraps response in 'data' key: { success: true, data: {...} }
+            const data = response.data || response;
             
             // Check if screen is archived or disabled
             if (data.status === 'archived' || data.status === 'disabled') {
@@ -304,8 +306,13 @@ const PublicPlayer: React.FC = () => {
                 .map((pItem: any, idx: number) => {
                     const m = data.media.find((am: any) => am.id === pItem.mediaId);
                     if (!m) return null;
+                    // Normalize media URL to fix localhost URLs
+                    const normalizedMedia = {
+                        ...m,
+                        url: normalizeMediaUrl(m.url)
+                    };
                     return { 
-                        media: m, 
+                        media: normalizedMedia, 
                         duration: pItem.duration, 
                         key: `${pItem.id}-${idx}`,
                         playbackConfig: pItem.playbackConfig || { mode: 'duration', duration: pItem.duration }
