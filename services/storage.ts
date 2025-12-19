@@ -574,9 +574,9 @@ export const StorageService = {
               return item;
           });
           
-          // Cache for 3 minutes (media changes less frequently)
-          // Convert milliseconds to days for cookie expiration (0.002 days ≈ 3 minutes)
-          cacheManager.set('media', normalizedData, 0.002);
+          // Cache for 5 minutes to reduce API calls and avoid database connection limits
+          // Convert milliseconds to days for cookie expiration (0.0035 days ≈ 5 minutes)
+          cacheManager.set('media', normalizedData, 0.0035);
           
           return normalizedData;
       } catch (e) {
@@ -870,9 +870,13 @@ export const StorageService = {
           // Check if response is JSON before parsing
           const contentType = res.headers.get('content-type');
           if (!contentType || !contentType.includes('application/json')) {
-              // HTML response (PHP warnings) - return default
+              // HTML response (PHP warnings or database errors) - return default
               const text = await res.text().catch(() => '');
-              console.error('Storage usage returned HTML instead of JSON:', text.substring(0, 200));
+              if (text.includes('max_connections_per_hour') || text.includes('Database connection failed')) {
+                  console.warn('Database connection limit exceeded. Using cached data.');
+              } else {
+                  console.error('Storage usage returned HTML instead of JSON:', text.substring(0, 200));
+              }
               return 0;
           }
           const response = await res.json();
@@ -880,9 +884,9 @@ export const StorageService = {
           const data = response.data || response;
           const usage = data.usedMB || data.used || 0;
           
-          // Cache for 1 minute (storage changes when media is uploaded/deleted)
-          // Cache for 1 minute (0.0007 days ≈ 1 minute)
-          cacheManager.set('storage_usage', usage, 0.0007);
+          // Cache for 5 minutes to reduce API calls and avoid database connection limits
+          // Cache for 5 minutes (0.0035 days ≈ 5 minutes)
+          cacheManager.set('storage_usage', usage, 0.0035);
           
           return usage;
       } catch (e) {
@@ -917,9 +921,13 @@ export const StorageService = {
                   const errorData = await res.json().catch(() => ({}));
                   console.error('Storage breakdown error:', res.status, errorData);
               } else {
-                  // HTML response (PHP warnings) - log but don't parse
+                  // HTML response (PHP warnings or database errors) - log but don't parse
                   const text = await res.text().catch(() => '');
-                  console.error('Storage breakdown error (HTML response):', res.status, text.substring(0, 200));
+                  if (text.includes('max_connections_per_hour') || text.includes('Database connection failed')) {
+                      console.warn('Database connection limit exceeded. Using cached data.');
+                  } else {
+                      console.error('Storage breakdown error (HTML response):', res.status, text.substring(0, 200));
+                  }
               }
               if (handleAuthError(res.status)) {
                   return { image: 0, video: 0, pdf: 0, gif: 0, other: 0 };
@@ -929,9 +937,13 @@ export const StorageService = {
           // Check if response is JSON before parsing
           const contentType = res.headers.get('content-type');
           if (!contentType || !contentType.includes('application/json')) {
-              // HTML response (PHP warnings) - return default
+              // HTML response (PHP warnings or database errors) - return default
               const text = await res.text().catch(() => '');
-              console.error('Storage breakdown returned HTML instead of JSON:', text.substring(0, 200));
+              if (text.includes('max_connections_per_hour') || text.includes('Database connection failed')) {
+                  console.warn('Database connection limit exceeded. Using cached data.');
+              } else {
+                  console.error('Storage breakdown returned HTML instead of JSON:', text.substring(0, 200));
+              }
               return { image: 0, video: 0, pdf: 0, gif: 0, other: 0 };
           }
           const response = await res.json();

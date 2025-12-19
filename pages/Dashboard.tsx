@@ -29,12 +29,12 @@ const Dashboard: React.FC = () => {
     refreshStats();
     refreshUserData();
     loadWarnings();
-    // Auto-refresh every 30 seconds for user data and warnings
+    // Auto-refresh every 2 minutes (120000ms) to reduce API calls and avoid database connection limits
     const interval = setInterval(() => {
       refreshStats(false);
       refreshUserData();
       loadWarnings();
-    }, 30000);
+    }, 120000);
     // Listen for user updates from admin actions
     const handleUserUpdate = () => {
       refreshUserData();
