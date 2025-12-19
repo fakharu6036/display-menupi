@@ -51,8 +51,16 @@ const Dashboard: React.FC = () => {
     try {
       const updatedUser = await StorageService.refreshUserData();
       setUser(updatedUser);
-    } catch (err) {
-      console.error('Failed to refresh user data:', err);
+    } catch (err: any) {
+      // Don't log errors if it's just "No user session" - user might not be logged in yet
+      if (err.message && !err.message.includes('No user session')) {
+        console.error('Failed to refresh user data:', err);
+      }
+      // If refresh fails, keep current user state (don't clear it)
+      const currentUser = StorageService.getUser();
+      if (currentUser) {
+        setUser(currentUser);
+      }
     }
   };
 
