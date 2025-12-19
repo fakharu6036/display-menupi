@@ -4,8 +4,11 @@ import { cookieManager } from '../utils/cookies';
 import { apiUrl, getApiBaseUrl } from '../utils/apiUrl';
 
 // Helper to handle authentication errors
+// Only logout on 401 (Unauthorized) - token is definitely invalid
+// 403 (Forbidden) might be a permission issue, not necessarily invalid token
 const handleAuthError = (status: number) => {
-    if (status === 401 || status === 403) {
+    if (status === 401) {
+        // 401 = token is invalid, definitely logout
         localStorage.removeItem('menupi_user');
         // Only redirect if not already on login page
         if (!window.location.pathname.includes('/login')) {
@@ -13,6 +16,7 @@ const handleAuthError = (status: number) => {
         }
         return true;
     }
+    // 403 or other errors - don't logout, might be temporary/permission issue
     return false;
 };
 
