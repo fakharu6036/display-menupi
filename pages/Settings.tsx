@@ -46,10 +46,10 @@ const Settings: React.FC = () => {
       loadData();
     };
     window.addEventListener('menupi-user-updated', handleUserUpdate);
-    // Auto-refresh every 30 seconds
+    // Auto-refresh every 2 minutes to reduce database load
     const interval = setInterval(() => {
       loadData();
-    }, 30000);
+    }, 120000);
     return () => {
       clearInterval(interval);
       window.removeEventListener('menupi-user-updated', handleUserUpdate);

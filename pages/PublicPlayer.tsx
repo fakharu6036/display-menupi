@@ -487,8 +487,8 @@ const PublicPlayer: React.FC = () => {
     // Separate effect for playlist refresh
     useEffect(() => {
         refreshPlaylist(true); // Force refresh on initial load
-        // Check for updates every 30 seconds (more frequent than before)
-        const interval = setInterval(() => refreshPlaylist(false), 30000);
+        // Check for updates every 60 seconds to reduce database load
+        const interval = setInterval(() => refreshPlaylist(false), 60000);
         
         return () => {
             clearInterval(interval);
