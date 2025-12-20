@@ -877,10 +877,24 @@ export const StorageService = {
               if (contentType && contentType.includes('application/json')) {
                   const errorData = await res.json().catch(() => ({}));
                   console.error('Storage usage error:', res.status, errorData);
+                  // Check if 403 error says token is invalid/expired - logout in that case
+                  if (res.status === 403 && errorData.error && 
+                      (errorData.error.includes('Invalid or expired token') || errorData.error.includes('Unauthorized'))) {
+                      console.warn('Token invalid or expired. Logging out.');
+                      localStorage.removeItem('menupi_user');
+                      if (!window.location.pathname.includes('/login')) {
+                          window.location.href = '/login';
+                      }
+                      return 0;
+                  }
               } else {
-                  // HTML response (PHP warnings) - log but don't parse
+                  // HTML response (PHP warnings or database errors) - log but don't parse
                   const text = await res.text().catch(() => '');
-                  console.error('Storage usage error (HTML response):', res.status, text.substring(0, 200));
+                  if (text.includes('max_connections_per_hour') || text.includes('Database connection failed')) {
+                      console.warn('Database connection limit exceeded. Using cached data.');
+                  } else {
+                      console.error('Storage usage error (HTML response):', res.status, text.substring(0, 200));
+                  }
               }
               if (handleAuthError(res.status)) {
                   return 0;
