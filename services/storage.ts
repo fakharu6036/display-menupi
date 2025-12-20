@@ -407,16 +407,47 @@ export const StorageService = {
           const url = token ? `${apiUrl('/screens')}?token=${encodeURIComponent(token)}` : apiUrl('/screens');
           const res = await fetch(url, { headers });
           if (!res.ok) {
+              // Check if response is HTML (PHP error) instead of JSON
+              const contentType = res.headers.get('content-type');
+              if (contentType && contentType.includes('text/html')) {
+                  const htmlError = await res.text().catch(() => '');
+                  console.error('API returned HTML instead of JSON:', res.status, htmlError.substring(0, 200));
+                  if (htmlError.includes('max_connections_per_hour') || htmlError.includes('Database connection failed')) {
+                      console.warn('Database connection limit exceeded. Using cached screens.');
+                      const cached = cacheManager.get<Screen[]>('screens');
+                      return cached || [];
+                  }
+              }
               if (handleAuthError(res.status)) {
                   throw new Error('Session expired. Please log in again.');
               }
               throw new Error('Failed to fetch screens');
           }
+          
+          // Check if response is JSON before parsing
+          const contentType = res.headers.get('content-type');
+          if (!contentType || !contentType.includes('application/json')) {
+              // HTML response (PHP warnings or database errors) - return cached data
+              const text = await res.text().catch(() => '');
+              console.error('Screens API returned HTML instead of JSON:', text.substring(0, 200));
+              if (text.includes('max_connections_per_hour') || text.includes('Database connection failed')) {
+                  console.warn('Database connection limit exceeded. Using cached screens.');
+              }
+              const cached = cacheManager.get<Screen[]>('screens');
+              return cached || [];
+          }
+          
           const response = await res.json();
           // Backend wraps response in 'data' key: { success: true, data: [...] }
           const data = response.data || response;
           // Ensure data is an array
           if (!Array.isArray(data)) {
+              // Check if it's a database connection error
+              if (typeof data === 'string' && (data.includes('max_connections_per_hour') || data.includes('Database connection failed'))) {
+                  console.warn('Database connection limit exceeded. Using cached screens.');
+                  const cached = cacheManager.get<Screen[]>('screens');
+                  return cached || [];
+              }
               console.error('Screens response is not an array:', response);
               return [];
           }
