@@ -27,8 +27,8 @@ import App from './App';
         return url;
     };
     
-    // Log that interceptor is active
-    console.log('[Fetch Interceptor] Active - Will fix double /api/ prefix for api.menupi.com');
+    // Only log when interceptor actually fixes a URL (not on every page load)
+    // Removed initial log to reduce console noise
     
     window.fetch = function(input: RequestInfo | URL, init?: RequestInit): Promise<Response> {
         let url: string = '';
