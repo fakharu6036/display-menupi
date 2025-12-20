@@ -225,12 +225,39 @@ const PublicPlayer: React.FC = () => {
             const res = await fetch(apiUrl(`/public/screen/${screenCode.toUpperCase()}`));
             
             if (!res.ok) {
+                // Check if response is HTML (PHP error) instead of JSON
+                const contentType = res.headers.get('content-type');
+                if (contentType && contentType.includes('text/html')) {
+                    const htmlError = await res.text().catch(() => '');
+                    console.error('API returned HTML instead of JSON:', res.status, htmlError.substring(0, 200));
+                    if (htmlError.includes('max_connections_per_hour') || htmlError.includes('Database connection failed')) {
+                        setError("Database temporarily unavailable. Retrying...");
+                    } else {
+                        setError("Server error. Please try again later.");
+                    }
+                    return;
+                }
+                
                 if (res.status === 404) {
                     setError("Screen not found");
                 } else if (res.status === 403) {
                     setError("Screen access denied");
                 } else {
                     setError("Failed to load screen");
+                }
+                return;
+            }
+            
+            // Check if response is JSON before parsing
+            const contentType = res.headers.get('content-type');
+            if (!contentType || !contentType.includes('application/json')) {
+                // HTML response (PHP warnings or database errors) - handle gracefully
+                const text = await res.text().catch(() => '');
+                console.error('API returned HTML instead of JSON:', text.substring(0, 200));
+                if (text.includes('max_connections_per_hour') || text.includes('Database connection failed')) {
+                    setError("Database temporarily unavailable. Retrying...");
+                } else {
+                    setError("Server error. Please try again later.");
                 }
                 return;
             }
