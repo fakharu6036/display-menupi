@@ -540,7 +540,27 @@ export const StorageService = {
 
       try {
           const res = await fetch(apiUrl('/media'), { headers: getAuthHeaders() });
-          if (!res.ok) return [];
+          if (!res.ok) {
+              // Check if 403 error says token is invalid/expired - logout in that case
+              if (res.status === 403) {
+                  const contentType = res.headers.get('content-type');
+                  if (contentType && contentType.includes('application/json')) {
+                      const errorData = await res.json().catch(() => ({}));
+                      if (errorData.error && 
+                          (errorData.error.includes('Invalid or expired token') || errorData.error.includes('Unauthorized'))) {
+                          console.warn('Token invalid or expired. Logging out.');
+                          localStorage.removeItem('menupi_user');
+                          if (!window.location.pathname.includes('/login')) {
+                              window.location.href = '/login';
+                          }
+                      }
+                  }
+              }
+              if (handleAuthError(res.status)) {
+                  return [];
+              }
+              return [];
+          }
           const response = await res.json();
           // Backend wraps response in 'data' key: { success: true, data: [...] }
           const data = response.data || response;
@@ -920,6 +940,16 @@ export const StorageService = {
               if (contentType && contentType.includes('application/json')) {
                   const errorData = await res.json().catch(() => ({}));
                   console.error('Storage breakdown error:', res.status, errorData);
+                  // Check if 403 error says token is invalid/expired - logout in that case
+                  if (res.status === 403 && errorData.error && 
+                      (errorData.error.includes('Invalid or expired token') || errorData.error.includes('Unauthorized'))) {
+                      console.warn('Token invalid or expired. Logging out.');
+                      localStorage.removeItem('menupi_user');
+                      if (!window.location.pathname.includes('/login')) {
+                          window.location.href = '/login';
+                      }
+                      return { image: 0, video: 0, pdf: 0, gif: 0, other: 0 };
+                  }
               } else {
                   // HTML response (PHP warnings or database errors) - log but don't parse
                   const text = await res.text().catch(() => '');
@@ -950,8 +980,8 @@ export const StorageService = {
           // Backend wraps response in 'data' key: { success: true, data: {...} }
           const data = response.data || response;
           
-          // Cache for 1 minute
-          cacheManager.set('storage_breakdown', data, 0.0007);
+          // Cache for 5 minutes to reduce API calls and avoid database connection limits (0.0035 days ≈ 5 minutes)
+          cacheManager.set('storage_breakdown', data, 0.0035);
           
           return data;
       } catch (e) {
