@@ -64,7 +64,27 @@ const RootRoute: React.FC = () => {
 
 const App: React.FC = () => {
   useEffect(() => {
-    // Check for valid token on app load
+    const hostname = window.location.hostname;
+    const pathname = window.location.pathname;
+    
+    // Check if we're on TV subdomain (public player routes don't need auth)
+    const isTvSubdomain = hostname === "tv.menupi.com" || hostname.includes("tv.");
+    
+    // Check if this is a public route (public player, login, register, verify-email)
+    const isPublicRoute = 
+      pathname.startsWith("/tv/") || // /tv/:screenCode
+      pathname.match(/^\/[A-Z0-9]{6,}$/) || // /:screenCode (on TV subdomain)
+      pathname === "/tv" || // /tv (TvLogin)
+      pathname === "/login" ||
+      pathname === "/register" ||
+      pathname === "/verify-email";
+    
+    // Skip authentication check for public routes on TV subdomain
+    if (isTvSubdomain && isPublicRoute) {
+      return; // Don't check auth for public player routes
+    }
+    
+    // Check for valid token on app load (only for protected routes)
     const userStr = localStorage.getItem("menupi_user");
     let shouldLogout = false;
     if (!userStr) {
@@ -81,7 +101,8 @@ const App: React.FC = () => {
     }
     if (shouldLogout) {
       localStorage.removeItem("menupi_user");
-      if (!window.location.pathname.includes("/login")) {
+      // Only redirect to login if not already on a public route
+      if (!isPublicRoute && !pathname.includes("/login")) {
         window.location.href = "/login";
       }
     }
