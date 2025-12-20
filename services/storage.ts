@@ -434,9 +434,9 @@ export const StorageService = {
               return screen;
           });
           
-          // Cache for 2 minutes (screens change less frequently)
-          // Convert milliseconds to days for cookie expiration (0.0014 days ≈ 2 minutes)
-          cacheManager.set('screens', normalizedScreens, 0.0014);
+          // Cache for 5 minutes to reduce API calls and avoid database connection limits
+          // Convert milliseconds to days for cookie expiration (0.0035 days ≈ 5 minutes)
+          cacheManager.set('screens', normalizedScreens, 0.0035);
           
           return normalizedScreens;
       } catch (e) {
@@ -703,8 +703,8 @@ export const StorageService = {
           }
           
           // Cache for 2 minutes
-          // Cache for 2 minutes (0.0014 days ≈ 2 minutes)
-          cacheManager.set('schedules', data, 0.0014);
+          // Cache for 5 minutes to reduce API calls and avoid database connection limits (0.0035 days ≈ 5 minutes)
+          cacheManager.set('schedules', data, 0.0035);
           
           return data;
       } catch (e) {
