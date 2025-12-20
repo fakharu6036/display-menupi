@@ -70,20 +70,23 @@ const App: React.FC = () => {
     // Check if we're on TV subdomain (public player routes don't need auth)
     const isTvSubdomain = hostname === "tv.menupi.com" || hostname.includes("tv.");
     
-    // Check if this is a public route (public player, login, register, verify-email)
-    // On TV subdomain, root path (/) and screen codes are public
+    // On TV subdomain, ALL routes are public (no authentication required)
+    // This includes: / (TvLogin), /:screenCode (PublicPlayer), /tv/:screenCode
+    if (isTvSubdomain) {
+      return; // Skip authentication check entirely on TV subdomain
+    }
+    
+    // Check if this is a public route on app subdomain (login, register, verify-email)
     const isPublicRoute = 
-      (isTvSubdomain && pathname === "/") || // Root path on TV subdomain (TvLogin)
       pathname.startsWith("/tv/") || // /tv/:screenCode
-      (isTvSubdomain && pathname.match(/^\/[A-Z0-9]{6,}$/)) || // /:screenCode (on TV subdomain)
       pathname === "/tv" || // /tv (TvLogin)
       pathname === "/login" ||
       pathname === "/register" ||
       pathname === "/verify-email";
     
-    // Skip authentication check for public routes on TV subdomain
-    if (isTvSubdomain && (isPublicRoute || pathname === "/")) {
-      return; // Don't check auth for public player routes or root path on TV subdomain
+    // Skip authentication check for public routes on app subdomain
+    if (isPublicRoute) {
+      return; // Don't check auth for public routes
     }
     
     // Check for valid token on app load (only for protected routes)
