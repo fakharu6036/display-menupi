@@ -498,7 +498,7 @@ const Screens: React.FC = () => {
                  <div className="aspect-video bg-black rounded-lg overflow-hidden">
                      {previewScreen.playlist[0] && mediaMap[previewScreen.playlist[0].mediaId] ? (
                          <img 
-                             src={mediaMap[previewScreen.playlist[0].mediaId].url} 
+                             src={normalizeMediaUrl(mediaMap[previewScreen.playlist[0].mediaId].url)} 
                              alt="Preview" 
                              className="w-full h-full object-contain"
                          />

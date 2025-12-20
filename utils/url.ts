@@ -9,7 +9,9 @@ export const normalizeMediaUrl = (url: string | undefined | null): string => {
   if (url.startsWith('http://') || url.startsWith('https://')) {
     // Rewrite localhost URLs to use the correct production API URL
     // Also handle http://localhost (without port) and http://127.0.0.1
-    if (url.includes('localhost:3000') || url.includes('localhost:3001') || url.includes('127.0.0.1') || 
+    // Check for all variations: localhost:3000, localhost:3001, localhost (no port), 127.0.0.1
+    if (url.includes('localhost:3000') || url.includes('localhost:3001') || 
+        url.includes('127.0.0.1') || url.includes('localhost') || 
         url.startsWith('http://localhost') || url.startsWith('http://127.0.0.1')) {
       try {
         const urlObj = new URL(url);
