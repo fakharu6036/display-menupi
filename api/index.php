@@ -67,6 +67,7 @@ require_once __DIR__ . '/routes/auth.php';
 require_once __DIR__ . '/routes/screens.php';
 require_once __DIR__ . '/routes/media.php';
 require_once __DIR__ . '/routes/storage.php';
+require_once __DIR__ . '/routes/devices.php';
 
 // 404 - Route not found
 http_response_code(404);
