@@ -66,8 +66,13 @@ export const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) =>
   }
 
   // Require authentication for protected pages
+  useEffect(() => {
+    if (!user) {
+      navigate('/login', { replace: true });
+    }
+  }, [user, navigate]);
+
   if (!user) {
-    navigate('/login', { replace: true });
     return null;
   }
 
