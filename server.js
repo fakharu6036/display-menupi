@@ -55,11 +55,14 @@ const upload = multer({ storage });
 // Railway MySQL service provides MYSQL_* variables, but we also support DB_* for flexibility
 const dbConfig = {};
 
-// Support both Railway's MYSQL_* prefix and our DB_* prefix
-const dbHost = process.env.DB_HOST || process.env.MYSQL_HOST;
-const dbUser = process.env.DB_USER || process.env.MYSQL_USER;
-const dbPassword = process.env.DB_PASSWORD || process.env.MYSQL_PASSWORD;
-const dbName = process.env.DB_NAME || process.env.MYSQL_DATABASE;
+// Support multiple variable name formats:
+// 1. Railway's MYSQL* format (MYSQLHOST, MYSQLUSER, MYSQLPASSWORD, MYSQLDATABASE)
+// 2. Railway's MYSQL_* format (MYSQL_HOST, MYSQL_USER, MYSQL_PASSWORD, MYSQL_DATABASE)
+// 3. Our DB_* format (DB_HOST, DB_USER, DB_PASSWORD, DB_NAME)
+const dbHost = process.env.DB_HOST || process.env.MYSQL_HOST || process.env.MYSQLHOST;
+const dbUser = process.env.DB_USER || process.env.MYSQL_USER || process.env.MYSQLUSER;
+const dbPassword = process.env.DB_PASSWORD || process.env.MYSQL_PASSWORD || process.env.MYSQLPASSWORD;
+const dbName = process.env.DB_NAME || process.env.MYSQL_DATABASE || process.env.MYSQLDATABASE;
 
 // Only add valid configuration options
 if (dbHost) dbConfig.host = dbHost;
@@ -97,13 +100,15 @@ if (process.env.MYSQL_RECONNECT || process.env.DB_RECONNECT) {
 // Validate required database configuration
 if (!dbConfig.host || !dbConfig.user || !dbConfig.database) {
     console.error('❌ Database configuration missing. Required environment variables:');
-    console.error('   - DB_HOST or MYSQL_HOST');
-    console.error('   - DB_USER or MYSQL_USER');
-    console.error('   - DB_NAME or MYSQL_DATABASE');
-    console.error('   - DB_PASSWORD or MYSQL_PASSWORD');
+    console.error('   - DB_HOST or MYSQL_HOST or MYSQLHOST');
+    console.error('   - DB_USER or MYSQL_USER or MYSQLUSER');
+    console.error('   - DB_NAME or MYSQL_DATABASE or MYSQLDATABASE');
+    console.error('   - DB_PASSWORD or MYSQL_PASSWORD or MYSQLPASSWORD');
     console.error('');
-    console.error('💡 Railway MySQL service provides MYSQL_* variables automatically when linked.');
+    console.error('💡 Railway MySQL service provides MYSQL* variables automatically when linked.');
     console.error('💡 Link your MySQL service in Railway Dashboard → Variables → Add Reference');
+    console.error('');
+    console.error('Available env vars:', Object.keys(process.env).filter(k => k.includes('MYSQL') || k.includes('DB_')).join(', ') || 'none');
     process.exit(1);
 }
 
