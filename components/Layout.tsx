@@ -39,7 +39,24 @@ export const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) =>
     return () => window.removeEventListener('menupi-storage-change', handleStorageChange);
   }, []);
 
-  // No auto-login - user must login through the login page
+  // Require authentication for protected pages
+  useEffect(() => {
+    if (!user && !isAuthPage && !isTvPage && !location.pathname.startsWith('/admin')) {
+      navigate('/login', { replace: true });
+    }
+  }, [user, navigate, location.pathname]);
+
+  // Navigation items - MUST be called before any early returns (Rules of Hooks)
+  // Admin tab removed - will be replaced with features from display-menupi repo
+  const navItems = React.useMemo(() => {
+    return [
+      { to: '/dashboard', icon: Home, label: 'Home' },
+      { to: '/media', icon: ImageIcon, label: 'Media' },
+      { to: '/screens', icon: Monitor, label: 'Screens' },
+      { to: '/tvs', icon: Tv, label: 'TVs' },
+      { to: '/schedules', icon: Clock, label: 'Schedules' },
+    ];
+  }, []); // No dependencies needed
 
   // High-priority check for Public Player pages to strip ALL UI
   // On TV player context, check for root or screen code pattern
@@ -66,27 +83,9 @@ export const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) =>
   }
 
   // Require authentication for protected pages
-  useEffect(() => {
-    if (!user) {
-      navigate('/login', { replace: true });
-    }
-  }, [user, navigate]);
-
   if (!user) {
     return null;
   }
-
-  // Navigation items
-  // Admin tab removed - will be replaced with features from display-menupi repo
-  const navItems = React.useMemo(() => {
-    return [
-      { to: '/dashboard', icon: Home, label: 'Home' },
-      { to: '/media', icon: ImageIcon, label: 'Media' },
-      { to: '/screens', icon: Monitor, label: 'Screens' },
-      { to: '/tvs', icon: Tv, label: 'TVs' },
-      { to: '/schedules', icon: Clock, label: 'Schedules' },
-    ];
-  }, []); // No dependencies needed
 
   return (
     <div className="h-screen w-full flex flex-col md:flex-row bg-[#fdfbff] overflow-hidden">
