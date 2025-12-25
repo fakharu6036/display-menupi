@@ -1626,9 +1626,15 @@ app.post('/api/admin/plan-requests/:id/deny', authenticateToken, requireAdmin, a
 
 // Railway automatically sets process.env.PORT
 // CRITICAL: Railway might set PORT from MySQL service (3306) - we must reject that
-const PORT = process.env.PORT;
+// Also check RAILWAY_TCP_APPLICATION_PORT which Railway uses for TCP services
+let PORT = process.env.PORT || process.env.RAILWAY_TCP_APPLICATION_PORT;
+
+// If PORT is still not set, try common web ports (Railway web services usually use these)
 if (!PORT) {
+    // Railway web services typically use PORT, but if not set, try to detect
+    // For HTTP services, Railway should set PORT automatically
     console.error('❌ PORT environment variable not set. Railway should set this automatically.');
+    console.error('💡 Make sure you are deploying to a WEB SERVICE, not a database service.');
     process.exit(1);
 }
 
@@ -1637,12 +1643,14 @@ const portNum = parseInt(PORT, 10);
 if (portNum === 3306 || portNum === 5432 || portNum === 27017) {
     console.error('❌ CRITICAL: PORT is set to a database port!');
     console.error(`   Current PORT: ${PORT} (this is a MySQL/PostgreSQL/MongoDB port)`);
+    console.error(`   PORT source: ${process.env.PORT ? 'PORT' : 'RAILWAY_TCP_APPLICATION_PORT'}`);
     console.error('');
     console.error('💡 SOLUTION:');
     console.error('   1. Railway Dashboard → Your Web Service (NOT MySQL service)');
-    console.error('   2. Variables tab → Remove PORT variable if it exists');
+    console.error('   2. Variables tab → Remove PORT and RAILWAY_TCP_APPLICATION_PORT if they exist');
     console.error('   3. Railway will auto-set PORT for web services (usually 8080)');
     console.error('   4. Make sure backend is deployed to WEB service, not MySQL service');
+    console.error('   5. If using Railway CLI, link to the correct service: railway service link [web-service-name]');
     console.error('');
     console.error('⚠️  Server cannot start on database port. Exiting...');
     process.exit(1);
