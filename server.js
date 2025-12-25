@@ -50,24 +50,27 @@ const upload = multer({ storage });
 // Railway provides all database credentials via environment variables
 // MySQL2 pool configuration (only valid options to avoid warnings)
 // Updated: 2025-12-25 - Removed invalid options (acquireTimeout, timeout, reconnect)
-const dbConfig = {
-    host: process.env.DB_HOST,
-    user: process.env.DB_USER,
-    password: process.env.DB_PASSWORD,
-    database: process.env.DB_NAME,
-    waitForConnections: true,
-    connectionLimit: 10,
-    queueLimit: 0,
-    enableKeepAlive: true,
-    keepAliveInitialDelay: 0
-};
+// Build dbConfig object - ONLY include valid pool options
+// CRITICAL: Railway might have env vars that add invalid options - we must filter them out
+const dbConfig = {};
 
-// Explicitly remove any invalid options that might come from env vars or elsewhere
-// This prevents Railway env vars or other sources from adding invalid MySQL options
-// CRITICAL: These options are NOT valid for connection pools, only for individual connections
-delete dbConfig.acquireTimeout;
-delete dbConfig.timeout;
-delete dbConfig.reconnect;
+// Only add valid configuration options
+if (process.env.DB_HOST) dbConfig.host = process.env.DB_HOST;
+if (process.env.DB_USER) dbConfig.user = process.env.DB_USER;
+if (process.env.DB_PASSWORD) dbConfig.password = process.env.DB_PASSWORD;
+if (process.env.DB_NAME) dbConfig.database = process.env.DB_NAME;
+
+// Valid pool options only
+dbConfig.waitForConnections = true;
+dbConfig.connectionLimit = 10;
+dbConfig.queueLimit = 0;
+dbConfig.enableKeepAlive = true;
+dbConfig.keepAliveInitialDelay = 0;
+
+// CRITICAL: Explicitly DO NOT include invalid options
+// These are NOT valid for connection pools (only for individual connections)
+// Railway might try to add these via env vars - we must prevent it
+// DO NOT ADD: acquireTimeout, timeout, reconnect
 
 // Also check and remove from process.env if they exist (Railway might set these)
 // CRITICAL: These warnings help identify if Railway env vars are causing MySQL warnings
