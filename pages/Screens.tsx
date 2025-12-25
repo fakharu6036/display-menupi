@@ -13,7 +13,7 @@ import {
   Play, Pause, MonitorPlay, Smartphone, Timer, Trash2, ArrowRight, ArrowLeft, Clock, Scan, Sparkles, History, Zap
 } from 'lucide-react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { getApiBase } from '../services/config';
+import { getApiBase, getApiHeaders } from '../services/config';
 
 const ScreenPreview = ({ screen, media }: { screen: Screen, media: MediaItem[] }) => {
   const [index, setIndex] = useState(0);
@@ -264,10 +264,7 @@ const Screens: React.FC = () => {
       const API_BASE = getApiBase();
       const res = await fetch(`${API_BASE}/api/tvs/${deviceId}/assign`, {
         method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${localStorage.getItem('menupi_token')}`,
-          'Content-Type': 'application/json'
-        },
+        headers: getApiHeaders(true), // Include auth
         body: JSON.stringify({ 
           screenId: createdScreen.id 
         })
