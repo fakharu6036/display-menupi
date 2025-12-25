@@ -1,0 +1,42 @@
+# Railway ignore file
+# Files and directories to exclude from Railway deployment (backend only)
+
+# Frontend files (not needed for backend)
+components/
+pages/
+App.tsx
+index.tsx
+index.html
+vite.config.ts
+tsconfig.json
+dist/
+public/
+
+# Development files
+node_modules/
+uploads/
+.git/
+.env
+.env.local
+.env.*.local
+*.log
+.DS_Store
+coverage/
+.vscode/
+.idea/
+
+# Documentation (keep essential)
+*.md
+!README.md
+!RAILWAY_DEPLOYMENT.md
+!PRODUCTION_CHECKLIST.md
+!PRODUCTION_MIGRATION.md
+!BACKWARD_COMPATIBILITY.md
+
+# Vercel config (frontend only)
+vercel.json
+.vercelignore
+
+# Frontend build artifacts
+.vercel/
+

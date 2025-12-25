@@ -1,0 +1,85 @@
+
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <title>MENUPI | Digital Signage</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" />
+    <style>
+      :root {
+        /* Material Design 3 Tonal Palette - Indigo/Neutral */
+        --md-sys-color-primary: #3f51b5;
+        --md-sys-color-on-primary: #ffffff;
+        --md-sys-color-primary-container: #e0e0ff;
+        --md-sys-color-on-primary-container: #00006e;
+        --md-sys-color-secondary-container: #e1e2f6;
+        --md-sys-color-on-secondary-container: #191a2c;
+        --md-sys-color-surface: #fdfbff;
+        --md-sys-color-on-surface: #1b1b1f;
+        --md-sys-color-surface-container: #f3f3f7;
+        --md-sys-color-outline: #777680;
+        --md-sys-color-outline-variant: #c4c6d0;
+        --md-sys-color-error: #ba1a1a;
+      }
+      body {
+        font-family: 'Inter', system-ui, -apple-system, sans-serif;
+        background-color: var(--md-sys-color-surface);
+        color: var(--md-sys-color-on-surface);
+        overflow: hidden;
+        overscroll-behavior: none;
+        -webkit-tap-highlight-color: transparent;
+      }
+      .no-scrollbar::-webkit-scrollbar { display: none; }
+      
+      /* MD3 Card Transition - Reduced Radius for cleaner look */
+      .md-card {
+        border-radius: 16px;
+        background-color: var(--md-sys-color-surface-container);
+        transition: transform 200ms cubic-bezier(0.2, 0, 0, 1), background-color 200ms cubic-bezier(0.2, 0, 0, 1);
+      }
+      
+      .material-symbols-rounded { 
+        font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24; 
+        vertical-align: middle;
+      }
+
+      /* MD3 State Overlays */
+      .hover-state:hover::after {
+        content: '';
+        position: absolute;
+        inset: 0;
+        background-color: currentColor;
+        opacity: 0.08;
+      }
+
+      @keyframes fade-in {
+        from { opacity: 0; transform: translateY(4px); }
+        to { opacity: 1; transform: translateY(0); }
+      }
+      .animate-fade { animation: fade-in 300ms cubic-bezier(0.2, 0, 0, 1); }
+    </style>
+    <script type="importmap">
+    {
+      "imports": {
+        "react-dom/": "https://esm.sh/react-dom@^19.2.3/",
+        "react": "https://esm.sh/react@^19.2.3",
+        "react/": "https://esm.sh/react@^19.2.3/",
+        "react-router-dom": "https://esm.sh/react-router-dom@^7.10.1",
+        "lucide-react": "https://esm.sh/lucide-react@^0.561.0",
+        "@google/genai": "https://esm.sh/@google/genai@^1.34.0"
+      }
+    }
+    </script>
+    <script src="https://accounts.google.com/gsi/client" async defer></script>
+  <link rel="stylesheet" href="/index.css">
+</head>
+  <body>
+    <div id="root"></div>
+  <script type="module" src="/index.tsx"></script>
+</body>
+</html>
