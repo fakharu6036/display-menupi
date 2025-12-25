@@ -14,23 +14,28 @@ export const ProtectedAdminRoute: React.FC<ProtectedAdminRouteProps> = ({ childr
   const user = StorageService.getUser();
   
   useEffect(() => {
-    // Check if user is authenticated
-    if (!user) {
-      navigate('/login', { replace: true });
-      return;
-    }
-    
-    // Check if user has SUPER_ADMIN role (from display-menupi repo)
-    if (user.role !== UserRole.SUPER_ADMIN) {
-      // On portal subdomain, stay on login. On other domains, redirect to dashboard
-      const isPortal = typeof window !== 'undefined' && window.location.hostname.includes('portal.menupi.com');
-      if (isPortal) {
+    // Use setTimeout to ensure navigation happens after render
+    const timer = setTimeout(() => {
+      // Check if user is authenticated
+      if (!user) {
         navigate('/login', { replace: true });
-      } else {
-        navigate('/dashboard', { replace: true });
+        return;
       }
-      return;
-    }
+      
+      // Check if user has SUPER_ADMIN role (from display-menupi repo)
+      if (user.role !== UserRole.SUPER_ADMIN) {
+        // On portal subdomain, stay on login. On other domains, redirect to dashboard
+        const isPortal = typeof window !== 'undefined' && window.location.hostname.includes('portal.menupi.com');
+        if (isPortal) {
+          navigate('/login', { replace: true });
+        } else {
+          navigate('/dashboard', { replace: true });
+        }
+        return;
+      }
+    }, 0);
+    
+    return () => clearTimeout(timer);
   }, [user, navigate]);
   
   // Don't render children if user is not authenticated or not admin

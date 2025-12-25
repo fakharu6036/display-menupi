@@ -159,25 +159,41 @@ const AdminDashboard: React.FC = () => {
     });
     
     useEffect(() => {
-        const u = StorageService.getUser();
-        if (u?.role !== UserRole.SUPER_ADMIN) {
-            // On portal subdomain, redirect to login. On other domains, redirect to dashboard
-            const isPortal = window.location.hostname.includes('portal.menupi.com');
-            if (isPortal) {
-                navigate('/login', { replace: true });
-            } else {
-                navigate('/dashboard', { replace: true });
+        // Use setTimeout to ensure navigation happens after render
+        const timer = setTimeout(() => {
+            const u = StorageService.getUser();
+            if (u?.role !== UserRole.SUPER_ADMIN) {
+                // On portal subdomain, redirect to login. On other domains, redirect to dashboard
+                const isPortal = window.location.hostname.includes('portal.menupi.com');
+                if (isPortal) {
+                    navigate('/login', { replace: true });
+                } else {
+                    navigate('/dashboard', { replace: true });
+                }
+                return;
             }
-            return;
-        }
+            
+            setCurrentAdmin(u);
+            
+            // Redirect /admin to /admin/dashboard
+            if (location.pathname === '/admin' || location.pathname === '/') {
+                navigate('/admin/dashboard', { replace: true });
+                return;
+            }
+            
+            // Initial load based on current tab
+            loadAdminData();
+            loadAdmins();
+            if (activeTab === 'screens') loadAllScreens();
+            if (activeTab === 'users') loadAllUsers();
+            if (activeTab === 'system-health') loadSystemHealth();
+            if (activeTab === 'email') {
+                loadEmailSettings();
+                loadEmailLogs();
+            }
+        }, 0);
         
-        setCurrentAdmin(u);
-        
-        // Redirect /admin to /admin/dashboard
-        if (location.pathname === '/admin' || location.pathname === '/') {
-            navigate('/admin/dashboard', { replace: true });
-            return;
-        }
+        return () => clearTimeout(timer);
         
         // Initial load based on current tab
         loadAdminData();
