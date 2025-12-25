@@ -47,15 +47,26 @@ const storage = multer.diskStorage({
 const upload = multer({ storage });
 
 // Database Connection
+// Railway provides all database credentials via environment variables
 const dbConfig = {
-    host: process.env.DB_HOST || 'localhost',
-    user: process.env.DB_USER || 'root',
-    password: process.env.DB_PASSWORD || '',
-    database: process.env.DB_NAME || 'u859590789_disys',
+    host: process.env.DB_HOST,
+    user: process.env.DB_USER,
+    password: process.env.DB_PASSWORD,
+    database: process.env.DB_NAME,
     waitForConnections: true,
     connectionLimit: 10,
     queueLimit: 0
 };
+
+// Validate required database configuration
+if (!dbConfig.host || !dbConfig.user || !dbConfig.database) {
+    console.error('❌ Database configuration missing. Required environment variables:');
+    console.error('   - DB_HOST');
+    console.error('   - DB_USER');
+    console.error('   - DB_NAME');
+    console.error('   - DB_PASSWORD');
+    process.exit(1);
+}
 
 const pool = mysql.createPool(dbConfig);
 
@@ -75,15 +86,35 @@ const getBaseUrl = () => {
 const BASE_URL = getBaseUrl();
 
 // Test database connection (non-blocking)
+// Note: Database tables must be initialized via Railway MySQL Shell using migrations_all.sql
+// The backend does NOT auto-create tables in production
 pool.getConnection()
   .then(connection => {
-    console.log('✅ Database connected successfully');
-    connection.release();
+    console.log('✅ Database connected');
+    // Verify tables exist (silent check)
+    connection.query('SHOW TABLES LIKE "restaurants"')
+      .then(([rows]) => {
+        if (rows.length > 0) {
+          console.log('✅ Tables ready');
+        } else {
+          console.warn('⚠️  Database tables not initialized. Run migrations_all.sql in Railway MySQL Shell.');
+        }
+        connection.release();
+      })
+      .catch(() => {
+        // Silent fail - tables check is optional
+        connection.release();
+      });
   })
   .catch(err => {
-    console.warn('⚠️  Database connection failed:', err.message);
-    console.warn('⚠️  Server will continue, but database operations will fail until MySQL is running.');
-    console.warn('⚠️  Please ensure MySQL is running and database is set up. See DATABASE_SETUP.md for instructions.');
+    // Only log critical connection errors
+    if (err.code === 'ECONNREFUSED' || err.code === 'ENOTFOUND') {
+      console.error('❌ Database connection failed. Check DB_HOST, DB_USER, DB_PASSWORD, DB_NAME environment variables.');
+      console.error('   Error:', err.message);
+    } else {
+      // Other errors (auth, etc.) - log but don't be noisy
+      console.error('❌ Database connection error:', err.message);
+    }
   });
 
 // Middleware: Verify Token
@@ -95,7 +126,11 @@ const authenticateToken = (req, res, next) => {
         return res.status(401).json({ error: 'Authentication required' });
     }
 
-    jwt.verify(token, process.env.JWT_SECRET || 'secret_key', (err, user) => {
+    const jwtSecret = process.env.JWT_SECRET;
+    if (!jwtSecret) {
+        return res.status(500).json({ error: 'Server configuration error: JWT_SECRET not set' });
+    }
+    jwt.verify(token, jwtSecret, (err, user) => {
         if (err) {
             return res.status(403).json({ error: 'Invalid or expired token' });
         }
@@ -106,12 +141,59 @@ const authenticateToken = (req, res, next) => {
 
 // Helper to Generate JWT
 const generateToken = (user) => {
+    const jwtSecret = process.env.JWT_SECRET;
+    if (!jwtSecret) {
+        throw new Error('JWT_SECRET not configured');
+    }
     return jwt.sign(
         { id: user.id, restaurantId: user.restaurant_id, role: user.role }, 
-        process.env.JWT_SECRET || 'secret_key', 
+        jwtSecret, 
         { expiresIn: '24h' }
     );
 };
+
+// --- ROOT & HEALTH CHECK ROUTES ---
+
+// Root endpoint - API information
+app.get('/', (req, res) => {
+    res.json({
+        service: 'MENUPI API',
+        version: '1.0.0',
+        status: 'online',
+        endpoints: {
+            auth: '/api/login, /api/register, /api/auth/google',
+            media: '/api/media',
+            screens: '/api/screens',
+            schedules: '/api/schedules',
+            tvs: '/api/tvs',
+            admin: '/api/admin/*',
+            health: '/api/health'
+        },
+        documentation: 'https://github.com/fakharu6036/display-menupi'
+    });
+});
+
+// Health check endpoint
+app.get('/api/health', async (req, res) => {
+    try {
+        // Quick database connectivity check
+        const [result] = await pool.execute('SELECT 1 as health');
+        res.json({
+            status: 'healthy',
+            database: 'connected',
+            timestamp: new Date().toISOString(),
+            service: 'MENUPI API'
+        });
+    } catch (err) {
+        res.status(503).json({
+            status: 'unhealthy',
+            database: 'disconnected',
+            error: err.message,
+            timestamp: new Date().toISOString(),
+            service: 'MENUPI API'
+        });
+    }
+});
 
 // --- AUTH ROUTES ---
 
@@ -1498,7 +1580,13 @@ app.post('/api/admin/plan-requests/:id/deny', authenticateToken, requireAdmin, a
     }
 });
 
-const PORT = process.env.PORT || process.env.API_PORT || 3002;
+// Railway automatically sets process.env.PORT
+// No fallback needed - Railway requires PORT to be set
+const PORT = process.env.PORT;
+if (!PORT) {
+    console.error('❌ PORT environment variable not set. Railway should set this automatically.');
+    process.exit(1);
+}
 app.listen(PORT, () => {
     console.log(`🚀 API Server running on port ${PORT}`);
     console.log(`📡 API Base URL: ${BASE_URL}`);

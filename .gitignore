@@ -7,10 +7,20 @@ yarn-error.log*
 pnpm-debug.log*
 lerna-debug.log*
 
+# Dependencies
 node_modules
 dist
 dist-ssr
+
+# Environment files
 *.local
+.env.local
+.env.*.local
+.env.backup.*
+
+# User uploads (keep directory structure, ignore files)
+uploads/*
+!uploads/.gitkeep
 
 # Editor directories and files
 .vscode/*
