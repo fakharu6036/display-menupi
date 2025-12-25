@@ -12,7 +12,8 @@
     "server": "node server.js",
     "server:api": "API_PORT=3002 node server.js",
     "start": "node server.js",
-    "start:all": "concurrently \"npm run dev:dashboard\" \"npm run dev:tv\" \"npm run server:api\""
+    "start:all": "concurrently \"npm run dev:dashboard\" \"npm run dev:tv\" \"npm run server:api\"",
+    "version": "echo 'MENUPI API v2.0.0 - Commit: 97a9faf - Deployed: 2025-12-25'"
   },
   "dependencies": {
     "@google/genai": "^1.34.0",

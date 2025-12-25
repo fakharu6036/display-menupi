@@ -64,9 +64,21 @@ const dbConfig = {
 
 // Explicitly remove any invalid options that might come from env vars or elsewhere
 // This prevents Railway env vars or other sources from adding invalid MySQL options
+// CRITICAL: These options are NOT valid for connection pools, only for individual connections
 delete dbConfig.acquireTimeout;
 delete dbConfig.timeout;
 delete dbConfig.reconnect;
+
+// Also check and remove from process.env if they exist (Railway might set these)
+if (process.env.MYSQL_ACQUIRE_TIMEOUT || process.env.DB_ACQUIRE_TIMEOUT) {
+    console.warn('⚠️  Removing invalid MySQL option: acquireTimeout (not valid for pools)');
+}
+if (process.env.MYSQL_TIMEOUT || process.env.DB_TIMEOUT) {
+    console.warn('⚠️  Removing invalid MySQL option: timeout (not valid for pools)');
+}
+if (process.env.MYSQL_RECONNECT || process.env.DB_RECONNECT) {
+    console.warn('⚠️  Removing invalid MySQL option: reconnect (not valid for pools)');
+}
 
 // Validate required database configuration
 if (!dbConfig.host || !dbConfig.user || !dbConfig.database) {
