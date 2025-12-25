@@ -4380,9 +4380,7 @@ const AdminDashboard: React.FC = () => {
                                         const headers = getApiHeaders(true);
                                         const res = await fetch(`${API_BASE}/api/admin/forgot-password`, {
                                             method: 'POST',
-                                            headers: {
-                                                'Content-Type': 'application/json'
-                                            },
+                                            headers,
                                             body: JSON.stringify({ email: forgotPasswordEmail })
                                         });
                                         if (!res.ok) {
