@@ -62,6 +62,12 @@ const dbConfig = {
     keepAliveInitialDelay: 0
 };
 
+// Explicitly remove any invalid options that might come from env vars or elsewhere
+// This prevents Railway env vars or other sources from adding invalid MySQL options
+delete dbConfig.acquireTimeout;
+delete dbConfig.timeout;
+delete dbConfig.reconnect;
+
 // Validate required database configuration
 if (!dbConfig.host || !dbConfig.user || !dbConfig.database) {
     console.error('❌ Database configuration missing. Required environment variables:');
