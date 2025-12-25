@@ -13,6 +13,25 @@ export const isTvPlayerContext = (): boolean => {
 };
 
 /**
+ * Check if we're running in admin portal context (portal.menupi.com)
+ */
+export const isAdminPortalContext = (): boolean => {
+  if (typeof window === 'undefined') return false;
+  const hostname = window.location.hostname;
+  return hostname.includes('portal.menupi.com') || hostname === 'portal.menupi.com';
+};
+
+/**
+ * Check if we're running in dashboard context (app.menupi.com)
+ */
+export const isDashboardContext = (): boolean => {
+  if (typeof window === 'undefined') return false;
+  const hostname = window.location.hostname;
+  // Not TV, not Portal, and is menupi.com = Dashboard
+  return hostname.includes('menupi.com') && !isTvPlayerContext() && !isAdminPortalContext();
+};
+
+/**
  * Get the correct path for TV player navigation
  * On TV player context: returns root-level path (e.g., "/ABC123")
  * On dashboard context: returns /tv prefix path (e.g., "/tv/ABC123")
