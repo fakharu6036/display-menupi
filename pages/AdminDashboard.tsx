@@ -9,6 +9,7 @@ import { ConfirmModal } from '../components/ConfirmModal';
 import { showToast } from '../components/Toast';
 import { Users, Monitor, HardDrive, DollarSign, Shield, Activity, CheckCircle, XCircle, Clock, RefreshCw, Eye, X, AlertTriangle, Ban, UserPlus, Trash2, Edit, UserCircle, Settings, Search, Filter, Download, TrendingUp, TrendingDown, BarChart3, FileText, Zap, Server, Database, Globe, Mail, Calendar, ArrowUpRight, ArrowDownRight, Building2, Tv, Image as ImageIcon, Power, Key, Lock, Unlock, Play, Pause, AlertCircle, History, Heart, Wifi, WifiOff, Send, Check, X as XIcon, Loader2, PieChart, Menu, Lightbulb } from 'lucide-react';
 import { useNavigate, useLocation } from 'react-router-dom';
+import { getApiBase, getApiHeaders } from '../services/config';
 
 interface ActivityLog {
     id: string;
@@ -277,11 +278,11 @@ const AdminDashboard: React.FC = () => {
 
     const loadAllScreens = async () => {
         try {
-            const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001/api';
-            const token = localStorage.getItem('menupi_user') ? JSON.parse(localStorage.getItem('menupi_user')!).token : '';
+            const API_BASE = getApiBase();
+            const headers = getApiHeaders(true);
             
-            const res = await fetch(`${API_URL}/admin/screens`, {
-                headers: { 'Authorization': `Bearer ${token}` }
+            const res = await fetch(`${API_BASE}/api/admin/screens`, {
+                headers
             });
             
             if (res.ok) {
@@ -295,11 +296,11 @@ const AdminDashboard: React.FC = () => {
 
     const loadAllUsers = async () => {
         try {
-            const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001/api';
-            const token = localStorage.getItem('menupi_user') ? JSON.parse(localStorage.getItem('menupi_user')!).token : '';
+            const API_BASE = getApiBase();
+            const headers = getApiHeaders(true);
             
-            const res = await fetch(`${API_URL}/admin/users/all`, {
-                headers: { 'Authorization': `Bearer ${token}` }
+            const res = await fetch(`${API_BASE}/api/admin/users/all`, {
+                headers
             });
             
             if (res.ok) {
@@ -313,11 +314,11 @@ const AdminDashboard: React.FC = () => {
 
     const loadSystemHealth = async () => {
         try {
-            const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001/api';
-            const token = localStorage.getItem('menupi_user') ? JSON.parse(localStorage.getItem('menupi_user')!).token : '';
+            const API_BASE = getApiBase();
+            const headers = getApiHeaders(true);
             
-            const res = await fetch(`${API_URL}/admin/health`, {
-                headers: { 'Authorization': `Bearer ${token}` }
+            const res = await fetch(`${API_BASE}/api/admin/health`, {
+                headers
             });
             
             if (res.ok) {
@@ -332,11 +333,11 @@ const AdminDashboard: React.FC = () => {
 
     const loadEmailSettings = async () => {
         try {
-            const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001/api';
-            const token = localStorage.getItem('menupi_user') ? JSON.parse(localStorage.getItem('menupi_user')!).token : '';
+            const API_BASE = getApiBase();
+            const headers = getApiHeaders(true);
             
-            const res = await fetch(`${API_URL}/admin/email/settings`, {
-                headers: { 'Authorization': `Bearer ${token}` }
+            const res = await fetch(`${API_BASE}/api/admin/email/settings`, {
+                headers
             });
             
             if (res.ok) {
@@ -362,11 +363,11 @@ const AdminDashboard: React.FC = () => {
 
     const loadEmailLogs = async () => {
         try {
-            const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001/api';
-            const token = localStorage.getItem('menupi_user') ? JSON.parse(localStorage.getItem('menupi_user')!).token : '';
+            const API_BASE = getApiBase();
+            const headers = getApiHeaders(true);
             
-            const res = await fetch(`${API_URL}/admin/email/logs?limit=100`, {
-                headers: { 'Authorization': `Bearer ${token}` }
+            const res = await fetch(`${API_BASE}/api/admin/email/logs?limit=100`, {
+                headers
             });
             
             if (res.ok) {
@@ -380,11 +381,11 @@ const AdminDashboard: React.FC = () => {
 
     const loadFeatureRequests = async () => {
         try {
-            const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001/api';
-            const token = localStorage.getItem('menupi_user') ? JSON.parse(localStorage.getItem('menupi_user')!).token : '';
+            const API_BASE = getApiBase();
+            const headers = getApiHeaders(true);
             
-            const res = await fetch(`${API_URL}/admin/feature-requests`, {
-                headers: { 'Authorization': `Bearer ${token}` }
+            const res = await fetch(`${API_BASE}/api/admin/feature-requests`, {
+                headers
             });
             
             if (res.ok) {
@@ -407,13 +408,11 @@ const AdminDashboard: React.FC = () => {
 
     const loadAdmins = async () => {
         try {
-            const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001/api';
-            const token = localStorage.getItem('menupi_user') ? JSON.parse(localStorage.getItem('menupi_user')!).token : '';
+            const API_BASE = getApiBase();
+            const headers = getApiHeaders(true);
             
-            const res = await fetch(`${API_URL}/admin/admins`, {
-                headers: {
-                    'Authorization': `Bearer ${token}`
-                }
+            const res = await fetch(`${API_BASE}/api/admin/admins`, {
+                headers
             });
             
             if (res.ok) {
@@ -443,15 +442,12 @@ const AdminDashboard: React.FC = () => {
         }
 
         try {
-            const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001/api';
-            const token = localStorage.getItem('menupi_user') ? JSON.parse(localStorage.getItem('menupi_user')!).token : '';
+            const API_BASE = getApiBase();
+            const headers = getApiHeaders(true);
             
-            const res = await fetch(`${API_URL}/admin/admins`, {
+            const res = await fetch(`${API_BASE}/api/admin/admins`, {
                 method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${token}`
-                },
+                headers,
                 body: JSON.stringify(newAdmin)
             });
 
@@ -477,15 +473,12 @@ const AdminDashboard: React.FC = () => {
 
     const handleAddUser = async () => {
         try {
-            const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001/api';
-            const token = localStorage.getItem('menupi_user') ? JSON.parse(localStorage.getItem('menupi_user')!).token : '';
+            const API_BASE = getApiBase();
+            const headers = getApiHeaders(true);
             
-            const res = await fetch(`${API_URL}/admin/users`, {
+            const res = await fetch(`${API_BASE}/api/admin/users`, {
                 method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${token}`
-                },
+                headers,
                 body: JSON.stringify(newUser)
             });
 
@@ -511,8 +504,9 @@ const AdminDashboard: React.FC = () => {
         }
 
         try {
-            const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001/api';
-            const token = localStorage.getItem('menupi_user') ? JSON.parse(localStorage.getItem('menupi_user')!).token : '';
+            const API_BASE = getApiBase();
+            const headers = getApiHeaders(true);
+            
             // Use restaurantId if available (from allUsers), otherwise use id (from users/restaurants array)
             const restaurantId = selectedUser.restaurantId || selectedUser.id;
             
@@ -531,12 +525,9 @@ const AdminDashboard: React.FC = () => {
                 }
             }
             
-            const res = await fetch(`${API_URL}/admin/users/${restaurantId}/warn`, {
+            const res = await fetch(`${API_BASE}/api/admin/users/${restaurantId}/warn`, {
                 method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${token}`
-                },
+                headers,
                 body: JSON.stringify({
                     warningType: warningData.warningType,
                     reason: warningData.reason,
@@ -572,8 +563,9 @@ const AdminDashboard: React.FC = () => {
         setIsDeleteConfirmOpen(false);
 
         try {
-            const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001/api';
-            const token = localStorage.getItem('menupi_user') ? JSON.parse(localStorage.getItem('menupi_user')!).token : '';
+            const API_BASE = getApiBase();
+            const headers = getApiHeaders(true);
+            
             // Use restaurantId if available (from allUsers), otherwise use id (from users/restaurants array)
             const restaurantId = selectedUser.restaurantId || selectedUser.id;
             
@@ -582,11 +574,9 @@ const AdminDashboard: React.FC = () => {
                 return;
             }
             
-            const res = await fetch(`${API_URL}/admin/users/${restaurantId}`, {
+            const res = await fetch(`${API_BASE}/api/admin/users/${restaurantId}`, {
                 method: 'DELETE',
-                headers: {
-                    'Authorization': `Bearer ${token}`
-                }
+                headers
             });
 
             if (!res.ok) {
@@ -609,8 +599,9 @@ const AdminDashboard: React.FC = () => {
         if (!selectedUser) return;
 
         try {
-            const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001/api';
-            const token = localStorage.getItem('menupi_user') ? JSON.parse(localStorage.getItem('menupi_user')!).token : '';
+            const API_BASE = getApiBase();
+            const headers = getApiHeaders(true);
+            
             // Use restaurantId if available (from allUsers), otherwise use id (from users/restaurants array)
             const restaurantId = selectedUser.restaurantId || selectedUser.id;
             
@@ -631,12 +622,9 @@ const AdminDashboard: React.FC = () => {
                 return;
             }
             
-            const res = await fetch(`${API_URL}/admin/users/${restaurantId}/subscription`, {
+            const res = await fetch(`${API_BASE}/api/admin/users/${restaurantId}/subscription`, {
                 method: 'PUT',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${token}`
-                },
+                headers,
                 body: JSON.stringify({ plan: planValue })
             });
 
@@ -1852,14 +1840,12 @@ const AdminDashboard: React.FC = () => {
                                                                 <div className="flex items-center gap-2">
                                                                     <Button
                                                                         onClick={async () => {
-                                                                            const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001/api';
-                                                                            const token = localStorage.getItem('menupi_user') ? JSON.parse(localStorage.getItem('menupi_user')!).token : '';
-                                                                            const res = await fetch(`${API_URL}/admin/screens/${screen.id}/disable`, {
+                                                                            const API_BASE = getApiBase();
+            const headers = getApiHeaders(true);
+            
+            const res = await fetch(`${API_BASE}/api/admin/screens/${screen.id}/disable`, {
                                                                                 method: 'PUT',
-                                                                                headers: { 
-                                                                                    'Content-Type': 'application/json',
-                                                                                    'Authorization': `Bearer ${token}` 
-                                                                                },
+                                                                                headers,
                                                                                 body: JSON.stringify({ disabled: !screen.isDisabled })
                                                                             });
                                                                             if (res.ok) loadAllScreens();
@@ -1873,11 +1859,12 @@ const AdminDashboard: React.FC = () => {
                                                                     </Button>
                                                                     <Button
                                                                         onClick={async () => {
-                                                                            const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001/api';
-                                                                            const token = localStorage.getItem('menupi_user') ? JSON.parse(localStorage.getItem('menupi_user')!).token : '';
-                                                                            await fetch(`${API_URL}/admin/screens/${screen.id}/refresh`, {
+                                                                            const API_BASE = getApiBase();
+            const headers = getApiHeaders(true);
+            
+            await fetch(`${API_BASE}/api/admin/screens/${screen.id}/refresh`, {
                                                                                 method: 'POST',
-                                                                                headers: { 'Authorization': `Bearer ${token}` }
+                                                                                headers
                                                                             });
                                                                             showToast('Screen will refresh on next heartbeat', 'info');
                                                                         }}
@@ -2477,11 +2464,12 @@ const AdminDashboard: React.FC = () => {
                                         onClick={async () => {
                                             setIsTestEmailLoading(true);
                                             try {
-                                                const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001/api';
-                                                const token = localStorage.getItem('menupi_user') ? JSON.parse(localStorage.getItem('menupi_user')!).token : '';
-                                                const res = await fetch(`${API_URL}/admin/email/test`, {
+                                                const API_BASE = getApiBase();
+            const headers = getApiHeaders(true);
+            
+            const res = await fetch(`${API_BASE}/api/admin/email/test`, {
                                                     method: 'POST',
-                                                    headers: { 'Authorization': `Bearer ${token}` }
+                                                    headers
                                                 });
                                                 const data = await res.json();
                                                 if (res.ok) {
@@ -2541,14 +2529,12 @@ const AdminDashboard: React.FC = () => {
                                                 onClick={async () => {
                                                     const newEmailTypes = { ...emailSettings.emailTypes, [type]: !enabled };
                                                     try {
-                                                        const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001/api';
-                                                        const token = localStorage.getItem('menupi_user') ? JSON.parse(localStorage.getItem('menupi_user')!).token : '';
-                                                        const res = await fetch(`${API_URL}/admin/email/types`, {
+                                                        const API_BASE = getApiBase();
+            const headers = getApiHeaders(true);
+            
+            const res = await fetch(`${API_BASE}/api/admin/email/types`, {
                                                             method: 'PUT',
-                                                            headers: {
-                                                                'Content-Type': 'application/json',
-                                                                'Authorization': `Bearer ${token}`
-                                                            },
+                                                            headers,
                                                             body: JSON.stringify({ emailTypes: newEmailTypes })
                                                         });
                                                         if (res.ok) {
@@ -2743,14 +2729,12 @@ const AdminDashboard: React.FC = () => {
                                                                         const newStatus = request.status === 'pending' ? 'approved' : 
                                                                                          request.status === 'approved' ? 'completed' : 'pending';
                                                                         try {
-                                                                            const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001/api';
-                                                                            const token = localStorage.getItem('menupi_user') ? JSON.parse(localStorage.getItem('menupi_user')!).token : '';
-                                                                            const res = await fetch(`${API_URL}/admin/feature-requests/${request.id}/status`, {
+                                                                            const API_BASE = getApiBase();
+            const headers = getApiHeaders(true);
+            
+            const res = await fetch(`${API_BASE}/api/admin/feature-requests/${request.id}/status`, {
                                                                                 method: 'PUT',
-                                                                                headers: {
-                                                                                    'Content-Type': 'application/json',
-                                                                                    'Authorization': `Bearer ${token}`
-                                                                                },
+                                                                                headers,
                                                                                 body: JSON.stringify({ 
                                                                                     status: newStatus,
                                                                                     adminNotes: request.adminNotes || ''
@@ -2788,14 +2772,12 @@ const AdminDashboard: React.FC = () => {
                                                                     <Button
                                                                         onClick={async () => {
                                                                             try {
-                                                                                const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001/api';
-                                                                                const token = localStorage.getItem('menupi_user') ? JSON.parse(localStorage.getItem('menupi_user')!).token : '';
-                                                                                const res = await fetch(`${API_URL}/admin/feature-requests/${request.id}/status`, {
+                                                                                const API_BASE = getApiBase();
+            const headers = getApiHeaders(true);
+            
+            const res = await fetch(`${API_BASE}/api/admin/feature-requests/${request.id}/status`, {
                                                                                     method: 'PUT',
-                                                                                    headers: {
-                                                                                        'Content-Type': 'application/json',
-                                                                                        'Authorization': `Bearer ${token}`
-                                                                                    },
+                                                                                    headers,
                                                                                     body: JSON.stringify({ 
                                                                                         status: 'rejected',
                                                                                         adminNotes: request.adminNotes || ''
@@ -3313,14 +3295,12 @@ const AdminDashboard: React.FC = () => {
                                     size="sm"
                                     onClick={async () => {
                                         try {
-                                            const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001/api';
-                                            const token = localStorage.getItem('menupi_user') ? JSON.parse(localStorage.getItem('menupi_user')!).token : '';
-                                            const res = await fetch(`${API_URL}/admin/email/send`, {
+                                            const API_BASE = getApiBase();
+            const headers = getApiHeaders(true);
+            
+            const res = await fetch(`${API_BASE}/api/admin/email/send`, {
                                                 method: 'POST',
-                                                headers: {
-                                                    'Content-Type': 'application/json',
-                                                    'Authorization': `Bearer ${token}`
-                                                },
+                                                headers,
                                                 body: JSON.stringify({
                                                     emailType: 'password_reset',
                                                     recipient: selectedUser.email,
@@ -3350,14 +3330,12 @@ const AdminDashboard: React.FC = () => {
                                     size="sm"
                                     onClick={async () => {
                                         try {
-                                            const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001/api';
-                                            const token = localStorage.getItem('menupi_user') ? JSON.parse(localStorage.getItem('menupi_user')!).token : '';
-                                            const res = await fetch(`${API_URL}/admin/email/send`, {
+                                            const API_BASE = getApiBase();
+            const headers = getApiHeaders(true);
+            
+            const res = await fetch(`${API_BASE}/api/admin/email/send`, {
                                                 method: 'POST',
-                                                headers: {
-                                                    'Content-Type': 'application/json',
-                                                    'Authorization': `Bearer ${token}`
-                                                },
+                                                headers,
                                                 body: JSON.stringify({
                                                     emailType: 'user_invitation',
                                                     recipient: selectedUser.email,
@@ -3388,14 +3366,12 @@ const AdminDashboard: React.FC = () => {
                                         size="sm"
                                         onClick={async () => {
                                             try {
-                                                const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001/api';
-                                                const token = localStorage.getItem('menupi_user') ? JSON.parse(localStorage.getItem('menupi_user')!).token : '';
-                                                const res = await fetch(`${API_URL}/admin/email/send`, {
+                                                const API_BASE = getApiBase();
+            const headers = getApiHeaders(true);
+            
+            const res = await fetch(`${API_BASE}/api/admin/email/send`, {
                                                     method: 'POST',
-                                                    headers: {
-                                                        'Content-Type': 'application/json',
-                                                        'Authorization': `Bearer ${token}`
-                                                    },
+                                                    headers,
                                                     body: JSON.stringify({
                                                         emailType: 'account_created',
                                                         recipient: selectedUser.email,
@@ -3668,14 +3644,12 @@ const AdminDashboard: React.FC = () => {
                                         return;
                                     }
                                     try {
-                                        const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001/api';
-                                        const token = localStorage.getItem('menupi_user') ? JSON.parse(localStorage.getItem('menupi_user')!).token : '';
-                                        const res = await fetch(`${API_URL}/admin/users/${selectedUser.id}/reset-password`, {
+                                        const API_BASE = getApiBase();
+            const headers = getApiHeaders(true);
+            
+            const res = await fetch(`${API_BASE}/api/admin/users/${selectedUser.id}/reset-password`, {
                                             method: 'POST',
-                                            headers: {
-                                                'Content-Type': 'application/json',
-                                                'Authorization': `Bearer ${token}`
-                                            },
+                                            headers,
                                             body: JSON.stringify({ newPassword: resetPasswordData.newPassword })
                                         });
                                         if (!res.ok) {
@@ -3739,14 +3713,12 @@ const AdminDashboard: React.FC = () => {
                             <Button
                                 onClick={async () => {
                                     try {
-                                        const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001/api';
-                                        const token = localStorage.getItem('menupi_user') ? JSON.parse(localStorage.getItem('menupi_user')!).token : '';
-                                        const res = await fetch(`${API_URL}/admin/users/${selectedUser.id}/role`, {
+                                        const API_BASE = getApiBase();
+            const headers = getApiHeaders(true);
+            
+            const res = await fetch(`${API_BASE}/api/admin/users/${selectedUser.id}/role`, {
                                             method: 'PUT',
-                                            headers: {
-                                                'Content-Type': 'application/json',
-                                                'Authorization': `Bearer ${token}`
-                                            },
+                                            headers,
                                             body: JSON.stringify({ role: selectedUser.role })
                                         });
                                         if (!res.ok) {
@@ -3800,14 +3772,12 @@ const AdminDashboard: React.FC = () => {
                             <Button
                                 onClick={async () => {
                                     try {
-                                        const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001/api';
-                                        const token = localStorage.getItem('menupi_user') ? JSON.parse(localStorage.getItem('menupi_user')!).token : '';
-                                        const res = await fetch(`${API_URL}/admin/restaurants/${selectedRestaurant.restaurantId}/status`, {
+                                        const API_BASE = getApiBase();
+            const headers = getApiHeaders(true);
+            
+            const res = await fetch(`${API_BASE}/api/admin/restaurants/${selectedRestaurant.restaurantId}/status`, {
                                             method: 'PUT',
-                                            headers: {
-                                                'Content-Type': 'application/json',
-                                                'Authorization': `Bearer ${token}`
-                                            },
+                                            headers,
                                             body: JSON.stringify({ status: selectedRestaurant.accountStatus })
                                         });
                                         if (!res.ok) {
@@ -3858,14 +3828,12 @@ const AdminDashboard: React.FC = () => {
                             <Button
                                 onClick={async () => {
                                     try {
-                                        const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001/api';
-                                        const token = localStorage.getItem('menupi_user') ? JSON.parse(localStorage.getItem('menupi_user')!).token : '';
-                                        const res = await fetch(`${API_URL}/admin/restaurants/${selectedRestaurant.restaurantId}/limits`, {
+                                        const API_BASE = getApiBase();
+            const headers = getApiHeaders(true);
+            
+            const res = await fetch(`${API_BASE}/api/admin/restaurants/${selectedRestaurant.restaurantId}/limits`, {
                                             method: 'PUT',
-                                            headers: {
-                                                'Content-Type': 'application/json',
-                                                'Authorization': `Bearer ${token}`
-                                            },
+                                            headers,
                                             body: JSON.stringify({ maxScreens: selectedRestaurant.maxScreens })
                                         });
                                         if (!res.ok) {
@@ -4007,14 +3975,12 @@ const AdminDashboard: React.FC = () => {
                             <Button
                                 onClick={async () => {
                                     try {
-                                        const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001/api';
-                                        const token = localStorage.getItem('menupi_user') ? JSON.parse(localStorage.getItem('menupi_user')!).token : '';
-                                        const res = await fetch(`${API_URL}/admin/email/settings`, {
+                                        const API_BASE = getApiBase();
+            const headers = getApiHeaders(true);
+            
+            const res = await fetch(`${API_BASE}/api/admin/email/settings`, {
                                             method: 'PUT',
-                                            headers: {
-                                                'Content-Type': 'application/json',
-                                                'Authorization': `Bearer ${token}`
-                                            },
+                                            headers,
                                             body: JSON.stringify(emailSettingsForm)
                                         });
                                         if (res.ok) {
@@ -4062,11 +4028,12 @@ const AdminDashboard: React.FC = () => {
                             <Button
                                 onClick={async () => {
                                     try {
-                                        const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001/api';
-                                        const token = localStorage.getItem('menupi_user') ? JSON.parse(localStorage.getItem('menupi_user')!).token : '';
-                                        const res = await fetch(`${API_URL}/admin/restaurants/${selectedRestaurant.restaurantId}`, {
+                                        const API_BASE = getApiBase();
+            const headers = getApiHeaders(true);
+            
+            const res = await fetch(`${API_BASE}/api/admin/restaurants/${selectedRestaurant.restaurantId}`, {
                                             method: 'DELETE',
-                                            headers: { 'Authorization': `Bearer ${token}` }
+                                            headers
                                         });
                                         if (!res.ok) {
                                             const err = await res.json();
@@ -4134,15 +4101,13 @@ const AdminDashboard: React.FC = () => {
                 onConfirm={async () => {
                     if (!restaurantPlaybackAction) return;
                     try {
-                        const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001/api';
-                        const token = localStorage.getItem('menupi_user') ? JSON.parse(localStorage.getItem('menupi_user')!).token : '';
-                        const restaurantId = restaurantPlaybackAction.rest.restaurantId || restaurantPlaybackAction.rest.id;
-                        await fetch(`${API_URL}/admin/restaurants/${restaurantId}/playback`, {
+                        const API_BASE = getApiBase();
+            const headers = getApiHeaders(true);
+            
+            const restaurantId = restaurantPlaybackAction.rest.restaurantId || restaurantPlaybackAction.rest.id;
+                        await fetch(`${API_BASE}/api/admin/restaurants/${restaurantId}/playback`, {
                             method: 'PUT',
-                            headers: { 
-                                'Content-Type': 'application/json',
-                                'Authorization': `Bearer ${token}` 
-                            },
+                            headers,
                             body: JSON.stringify({ enabled: restaurantPlaybackAction.enabled })
                         });
                         loadAdminData(false);
@@ -4173,14 +4138,12 @@ const AdminDashboard: React.FC = () => {
                 onConfirm={async () => {
                     if (!screenDisableAction) return;
                     try {
-                        const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001/api';
-                        const token = localStorage.getItem('menupi_user') ? JSON.parse(localStorage.getItem('menupi_user')!).token : '';
-                        await fetch(`${API_URL}/admin/screens/${screenDisableAction.screen.id}/disable`, {
+                        const API_BASE = getApiBase();
+            const headers = getApiHeaders(true);
+            
+            await fetch(`${API_BASE}/api/admin/screens/${screenDisableAction.screen.id}/disable`, {
                             method: 'PUT',
-                            headers: { 
-                                'Content-Type': 'application/json',
-                                'Authorization': `Bearer ${token}` 
-                            },
+                            headers,
                             body: JSON.stringify({ disabled: screenDisableAction.disabled })
                         });
                         loadAllScreens();
@@ -4210,11 +4173,12 @@ const AdminDashboard: React.FC = () => {
                 onConfirm={async () => {
                     if (!selectedRestaurant) return;
                     try {
-                        const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001/api';
-                        const token = localStorage.getItem('menupi_user') ? JSON.parse(localStorage.getItem('menupi_user')!).token : '';
-                        await fetch(`${API_URL}/admin/restaurants/${selectedRestaurant.restaurantId || selectedRestaurant.id}/clear-storage`, {
+                        const API_BASE = getApiBase();
+            const headers = getApiHeaders(true);
+            
+            await fetch(`${API_BASE}/api/admin/restaurants/${selectedRestaurant.restaurantId || selectedRestaurant.id}/clear-storage`, {
                             method: 'POST',
-                            headers: { 'Authorization': `Bearer ${token}` }
+                            headers
                         });
                         loadAdminData(false);
                         showToast('Storage cleared successfully', 'success');
@@ -4241,11 +4205,12 @@ const AdminDashboard: React.FC = () => {
                 onConfirm={async () => {
                     if (!revokeScreenAction) return;
                     try {
-                        const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001/api';
-                        const token = localStorage.getItem('menupi_user') ? JSON.parse(localStorage.getItem('menupi_user')!).token : '';
-                        const res = await fetch(`${API_URL}/admin/screens/${revokeScreenAction.id}/revoke`, {
+                        const API_BASE = getApiBase();
+            const headers = getApiHeaders(true);
+            
+            const res = await fetch(`${API_BASE}/api/admin/screens/${revokeScreenAction.id}/revoke`, {
                             method: 'POST',
-                            headers: { 'Authorization': `Bearer ${token}` }
+                            headers
                         });
                         if (res.ok) {
                             const data = await res.json();
@@ -4335,14 +4300,12 @@ const AdminDashboard: React.FC = () => {
                                         return;
                                     }
                                     try {
-                                        const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001/api';
-                                        const token = localStorage.getItem('menupi_user') ? JSON.parse(localStorage.getItem('menupi_user')!).token : '';
-                                        const res = await fetch(`${API_URL}/admin/change-password`, {
+                                        const API_BASE = getApiBase();
+            const headers = getApiHeaders(true);
+            
+            const res = await fetch(`${API_BASE}/api/admin/change-password`, {
                                             method: 'POST',
-                                            headers: {
-                                                'Content-Type': 'application/json',
-                                                'Authorization': `Bearer ${token}`
-                                            },
+                                            headers,
                                             body: JSON.stringify({
                                                 oldPassword: changeMyPasswordData.oldPassword,
                                                 newPassword: changeMyPasswordData.newPassword
@@ -4413,8 +4376,9 @@ const AdminDashboard: React.FC = () => {
                                     }
                                     setIsForgotPasswordLoading(true);
                                     try {
-                                        const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001/api';
-                                        const res = await fetch(`${API_URL}/admin/forgot-password`, {
+                                        const API_BASE = getApiBase();
+                                        const headers = getApiHeaders(true);
+                                        const res = await fetch(`${API_BASE}/api/admin/forgot-password`, {
                                             method: 'POST',
                                             headers: {
                                                 'Content-Type': 'application/json'
