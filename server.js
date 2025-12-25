@@ -1627,7 +1627,21 @@ app.post('/api/admin/plan-requests/:id/deny', authenticateToken, requireAdmin, a
 // Railway automatically sets process.env.PORT
 // CRITICAL: Railway might set PORT from MySQL service (3306) - we must reject that
 // Also check RAILWAY_TCP_APPLICATION_PORT which Railway uses for TCP services
-let PORT = process.env.PORT || process.env.RAILWAY_TCP_APPLICATION_PORT;
+// But prioritize PORT if it's a valid web port
+let PORT = process.env.PORT;
+
+// If PORT is not set or is a database port, check RAILWAY_TCP_APPLICATION_PORT
+// But only use it if it's NOT a database port
+if (!PORT || parseInt(PORT, 10) === 3306 || parseInt(PORT, 10) === 5432 || parseInt(PORT, 10) === 27017) {
+    const tcpPort = process.env.RAILWAY_TCP_APPLICATION_PORT;
+    if (tcpPort) {
+        const tcpPortNum = parseInt(tcpPort, 10);
+        // Only use TCP port if it's NOT a database port
+        if (tcpPortNum !== 3306 && tcpPortNum !== 5432 && tcpPortNum !== 27017) {
+            PORT = tcpPort;
+        }
+    }
+}
 
 // If PORT is still not set, try common web ports (Railway web services usually use these)
 if (!PORT) {
