@@ -11,7 +11,15 @@ export default defineConfig(({ mode }) => {
         port: port,
         host: '0.0.0.0',
       },
-      plugins: [react()],
+      plugins: [
+        react(),
+        {
+          name: 'copy-index-css',
+          closeBundle() {
+            copyFileSync('index.css', 'dist/index.css');
+          }
+        }
+      ],
       define: {
         'process.env.API_KEY': JSON.stringify(env.GEMINI_API_KEY),
         'process.env.GEMINI_API_KEY': JSON.stringify(env.GEMINI_API_KEY)
