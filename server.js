@@ -11,7 +11,8 @@ import fs from 'fs';
 
 const app = express();
 
-// CORS Configuration for Production Subdomains
+// CORS Configuration
+// Supports both production (menupi.com subdomains) and Vercel frontend
 const corsOptions = {
   origin: function (origin, callback) {
     // Allow requests with no origin (like mobile apps or curl requests)
@@ -19,6 +20,22 @@ const corsOptions = {
     
     // Production: Allow all menupi.com subdomains
     if (origin.includes('menupi.com')) {
+      return callback(null, true);
+    }
+    
+    // Vercel: Allow Vercel preview and production domains
+    if (origin.includes('vercel.app') || origin.includes('vercel-dash.com')) {
+      return callback(null, true);
+    }
+    
+    // Development: Allow localhost for local testing
+    if (origin.includes('localhost') || origin.includes('127.0.0.1')) {
+      return callback(null, true);
+    }
+    
+    // Allow custom frontend URL if specified
+    const allowedFrontend = process.env.FRONTEND_URL;
+    if (allowedFrontend && origin.includes(allowedFrontend)) {
       return callback(null, true);
     }
     
@@ -117,11 +134,17 @@ const pool = mysql.createPool(dbConfig);
 // Get base URL for file serving (production only)
 const getBaseUrl = () => {
   // Check for explicit API URL in environment (required)
+  // Priority 1: Explicit API_URL (for local server or custom setup)
   if (process.env.API_URL) {
     return process.env.API_URL.endsWith('/') ? process.env.API_URL.slice(0, -1) : process.env.API_URL;
   }
   
-  // Production: Use API domain (api.menupi.com)
+  // Priority 2: Local server (if LOCAL_SERVER_URL is set)
+  if (process.env.LOCAL_SERVER_URL) {
+    return process.env.LOCAL_SERVER_URL.endsWith('/') ? process.env.LOCAL_SERVER_URL.slice(0, -1) : process.env.LOCAL_SERVER_URL;
+  }
+  
+  // Priority 3: Production: Use API domain (api.menupi.com)
   const protocol = process.env.PROTOCOL || 'https';
   const domain = process.env.DOMAIN || 'api.menupi.com';
   return `${protocol}://${domain}`;

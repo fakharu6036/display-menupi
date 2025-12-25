@@ -28,17 +28,19 @@ export const getTvPlayerPath = (screenCode?: string): string => {
 
 /**
  * Get the API base URL based on environment
- * Production: Uses API server (api.menupi.com)
- * Requires VITE_API_BASE_URL environment variable
+ * Priority:
+ * 1. VITE_API_BASE_URL (explicit, for local backend or custom setup)
+ * 2. Production subdomain detection (api.menupi.com)
+ * 3. Fallback to production URL
  */
 export const getApiBase = (): string => {
-  // Check for explicit environment variable (required)
+  // Priority 1: Check for explicit environment variable (for local backend)
   const envApi = import.meta.env?.VITE_API_BASE_URL || import.meta.env?.VITE_API_URL;
   if (envApi) {
     return envApi.endsWith('/') ? envApi.slice(0, -1) : envApi;
   }
 
-  // Production: Detect if we're on a menupi.com subdomain
+  // Priority 2: Production: Detect if we're on a menupi.com subdomain
   if (typeof window !== 'undefined') {
     const hostname = window.location.hostname;
     
