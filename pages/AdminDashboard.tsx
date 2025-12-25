@@ -191,25 +191,12 @@ const AdminDashboard: React.FC = () => {
                 loadEmailSettings();
                 loadEmailLogs();
             }
+            if (activeTab === 'audit') {
+                loadFeatureRequests();
+            }
         }, 0);
         
-        return () => clearTimeout(timer);
-        
-        // Initial load based on current tab
-        loadAdminData();
-        loadAdmins();
-        if (activeTab === 'screens') loadAllScreens();
-        if (activeTab === 'users') loadAllUsers();
-        if (activeTab === 'system-health') loadSystemHealth();
-        if (activeTab === 'email') {
-            loadEmailSettings();
-            loadEmailLogs();
-        }
-        if (activeTab === 'audit') {
-            loadFeatureRequests();
-        }
-        
-        // Set up auto-refresh every 120 seconds (2 minutes) to reduce server load
+        // Set up auto-refresh every 60 seconds to reduce server load
         refreshIntervalRef.current = setInterval(() => {
             loadAdminData(false); // Silent refresh
             loadAdmins();
@@ -228,6 +215,7 @@ const AdminDashboard: React.FC = () => {
         
         // Cleanup on unmount
         return () => {
+            clearTimeout(timer);
             if (refreshIntervalRef.current) {
                 clearInterval(refreshIntervalRef.current);
             }

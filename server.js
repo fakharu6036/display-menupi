@@ -28,6 +28,11 @@ const corsOptions = {
       return callback(null, true);
     }
     
+    // ngrok: Allow ngrok domains for local backend testing
+    if (origin.includes('ngrok.io') || origin.includes('ngrok-free.app') || origin.includes('ngrok.app')) {
+      return callback(null, true);
+    }
+    
     // Development: Allow localhost for local testing
     if (origin.includes('localhost') || origin.includes('127.0.0.1')) {
       return callback(null, true);
