@@ -17,11 +17,14 @@ const API_BASE = getApiBase();
 
 /**
  * Check if response is HTML (error page) instead of JSON
+ * Returns the response text if HTML, null if JSON
  */
-const checkHtmlResponse = async (res: Response, url: string): Promise<void> => {
+const checkHtmlResponse = async (res: Response, url: string): Promise<string | null> => {
   const contentType = res.headers.get('content-type');
   if (contentType && !contentType.includes('application/json')) {
-    const text = await res.text();
+    // Clone the response so we can read it without consuming the original
+    const clonedRes = res.clone();
+    const text = await clonedRes.text();
     console.error('❌ API returned HTML instead of JSON:', {
       url,
       status: res.status,
@@ -30,8 +33,9 @@ const checkHtmlResponse = async (res: Response, url: string): Promise<void> => {
       apiBase: API_BASE,
       envVar: import.meta.env?.VITE_API_BASE_URL || 'NOT SET'
     });
-    throw new Error(`API server returned HTML instead of JSON. Check if VITE_API_BASE_URL is set correctly in Vercel. Current API URL: ${API_BASE}`);
+    return text; // Return the text so caller can throw error
   }
+  return null; // Response is JSON, proceed normally
 };
 
 /**
@@ -169,7 +173,10 @@ export const StorageService = {
       const res = await fetch(`${API_BASE}/api/media`, { headers: getHeaders() });
       
       // Check if response is HTML (error page or ngrok warning)
-      await checkHtmlResponse(res, `${API_BASE}/api/media`);
+      const htmlText = await checkHtmlResponse(res, `${API_BASE}/api/media`);
+      if (htmlText) {
+        throw new Error(`API server returned HTML instead of JSON. Check if VITE_API_BASE_URL is set correctly in Vercel. Current API URL: ${API_BASE}`);
+      }
       
       if (!res.ok) {
         if (res.status === 401 || res.status === 403) {
@@ -264,7 +271,10 @@ export const StorageService = {
       const res = await fetch(`${API_BASE}/api/tvs`, { headers: getHeaders() });
       
       // Check if response is HTML (error page or ngrok warning)
-      await checkHtmlResponse(res, `${API_BASE}/api/tvs`);
+      const htmlText = await checkHtmlResponse(res, `${API_BASE}/api/tvs`);
+      if (htmlText) {
+        throw new Error(`API server returned HTML instead of JSON. Check if VITE_API_BASE_URL is set correctly in Vercel. Current API URL: ${API_BASE}`);
+      }
       
       if (!res.ok) {
         if (res.status === 401 || res.status === 403) {
@@ -384,7 +394,10 @@ export const StorageService = {
       const res = await fetch(`${API_BASE}/api/schedules`, { headers: getHeaders() });
       
       // Check if response is HTML (error page or ngrok warning)
-      await checkHtmlResponse(res, `${API_BASE}/api/schedules`);
+      const htmlText = await checkHtmlResponse(res, `${API_BASE}/api/schedules`);
+      if (htmlText) {
+        throw new Error(`API server returned HTML instead of JSON. Check if VITE_API_BASE_URL is set correctly in Vercel. Current API URL: ${API_BASE}`);
+      }
       
       if (!res.ok) {
         if (res.status === 401 || res.status === 403) {

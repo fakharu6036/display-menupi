@@ -56,7 +56,8 @@ export const getApiBase = (): string => {
   // Priority 1: Check for explicit environment variable (for local backend)
   const envApi = import.meta.env?.VITE_API_BASE_URL || import.meta.env?.VITE_API_URL;
   if (envApi) {
-    const apiUrl = envApi.endsWith('/') ? envApi.slice(0, -1) : envApi;
+    // Remove trailing slashes and whitespace (including newlines)
+    const apiUrl = envApi.trim().replace(/\/+$/, '');
     // Log in development to help debug
     if (import.meta.env.DEV) {
       console.log('🔗 Using API URL from environment:', apiUrl);
