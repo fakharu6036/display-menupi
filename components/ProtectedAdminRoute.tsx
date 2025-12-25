@@ -9,16 +9,18 @@ interface ProtectedAdminRouteProps {
 
 export const ProtectedAdminRoute: React.FC<ProtectedAdminRouteProps> = ({ children }) => {
   const navigate = useNavigate();
-  
-  // Check user synchronously first to avoid blank screen
-  const user = StorageService.getUser();
+  const [isChecking, setIsChecking] = useState(true);
   
   useEffect(() => {
+    // Check user after component mounts
+    const user = StorageService.getUser();
+    
     // Use setTimeout to ensure navigation happens after render
     const timer = setTimeout(() => {
       // Check if user is authenticated
       if (!user) {
         navigate('/login', { replace: true });
+        setIsChecking(false);
         return;
       }
       
@@ -31,14 +33,30 @@ export const ProtectedAdminRoute: React.FC<ProtectedAdminRouteProps> = ({ childr
         } else {
           navigate('/dashboard', { replace: true });
         }
+        setIsChecking(false);
         return;
       }
+      
+      setIsChecking(false);
     }, 0);
     
     return () => clearTimeout(timer);
-  }, [user, navigate]);
+  }, [navigate]);
+  
+  // Show loading state while checking
+  if (isChecking) {
+    return (
+      <div className="h-screen w-full flex items-center justify-center bg-[#fdfbff]">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#3f51b5] mx-auto mb-4"></div>
+          <p className="text-[#44474e] font-bold">Loading...</p>
+        </div>
+      </div>
+    );
+  }
   
   // Don't render children if user is not authenticated or not admin
+  const user = StorageService.getUser();
   if (!user || user.role !== UserRole.SUPER_ADMIN) {
     return null;
   }
