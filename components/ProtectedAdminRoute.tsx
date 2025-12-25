@@ -22,8 +22,13 @@ export const ProtectedAdminRoute: React.FC<ProtectedAdminRouteProps> = ({ childr
     
     // Check if user has SUPER_ADMIN role (from display-menupi repo)
     if (user.role !== UserRole.SUPER_ADMIN) {
-      // Redirect to dashboard - user doesn't have admin access
-      navigate('/dashboard', { replace: true });
+      // On portal subdomain, stay on login. On other domains, redirect to dashboard
+      const isPortal = typeof window !== 'undefined' && window.location.hostname.includes('portal.menupi.com');
+      if (isPortal) {
+        navigate('/login', { replace: true });
+      } else {
+        navigate('/dashboard', { replace: true });
+      }
       return;
     }
   }, [user, navigate]);

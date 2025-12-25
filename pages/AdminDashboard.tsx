@@ -161,14 +161,20 @@ const AdminDashboard: React.FC = () => {
     useEffect(() => {
         const u = StorageService.getUser();
         if (u?.role !== UserRole.SUPER_ADMIN) {
-            navigate('/dashboard');
+            // On portal subdomain, redirect to login. On other domains, redirect to dashboard
+            const isPortal = window.location.hostname.includes('portal.menupi.com');
+            if (isPortal) {
+                navigate('/login', { replace: true });
+            } else {
+                navigate('/dashboard', { replace: true });
+            }
             return;
         }
         
         setCurrentAdmin(u);
         
         // Redirect /admin to /admin/dashboard
-        if (location.pathname === '/admin') {
+        if (location.pathname === '/admin' || location.pathname === '/') {
             navigate('/admin/dashboard', { replace: true });
             return;
         }
