@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { StorageService } from '../services/storage';
 import { UserRole } from '../types';
@@ -9,12 +9,15 @@ interface ProtectedAdminRouteProps {
 
 export const ProtectedAdminRoute: React.FC<ProtectedAdminRouteProps> = ({ children }) => {
   const navigate = useNavigate();
-  const user = StorageService.getUser();
+  const [isAuthorized, setIsAuthorized] = useState<boolean | null>(null);
   
   useEffect(() => {
+    const user = StorageService.getUser();
+    
     // Check if user is authenticated
     if (!user) {
       navigate('/login', { replace: true });
+      setIsAuthorized(false);
       return;
     }
     
@@ -22,12 +25,15 @@ export const ProtectedAdminRoute: React.FC<ProtectedAdminRouteProps> = ({ childr
     if (user.role !== UserRole.SUPER_ADMIN) {
       // Redirect to dashboard - user doesn't have admin access
       navigate('/dashboard', { replace: true });
+      setIsAuthorized(false);
       return;
     }
-  }, [user, navigate]);
+    
+    setIsAuthorized(true);
+  }, [navigate]);
   
-  // Don't render children if user is not authenticated or not admin
-  if (!user || user.role !== UserRole.SUPER_ADMIN) {
+  // Don't render children until authorization is checked
+  if (isAuthorized === null || !isAuthorized) {
     return null;
   }
   
