@@ -247,24 +247,6 @@ const TvLogin: React.FC = () => {
                  <div className="flex-1 h-px bg-white/10" />
               </div>
 
-              {/* Pairing Code Section */}
-              <div className="flex flex-col items-center gap-2 md:gap-3">
-                 <p className="text-[8px] md:text-[9px] font-black text-white/40 uppercase tracking-[0.5em]">Pairing Code</p>
-                 <div className="text-xl sm:text-2xl md:text-3xl lg:text-4xl font-mono font-black text-[#3f51b5] tracking-widest bg-white rounded-[16px] md:rounded-[20px] py-3 md:py-3.5 lg:py-4 px-3 md:px-4 shadow-2xl w-full">
-                    {hardwareId || '...'}
-                 </div>
-                 <p className="text-[10px] md:text-xs text-white/60 font-medium leading-relaxed text-center max-w-sm mx-auto">
-                    Enter this code manually in the <span className="text-white font-black">TVs Tab</span> of your dashboard.
-                 </p>
-              </div>
-
-              {/* Divider */}
-              <div className="flex items-center gap-3">
-                 <div className="flex-1 h-px bg-white/10" />
-                 <p className="text-[7px] md:text-[8px] font-black text-white/30 uppercase tracking-[0.5em]">OR</p>
-                 <div className="flex-1 h-px bg-white/10" />
-              </div>
-
               {/* Manual Screen Code Entry */}
               <div className="flex flex-col items-center gap-2 md:gap-3">
                  <p className="text-[8px] md:text-[9px] font-black text-white/40 uppercase tracking-[0.5em] flex items-center gap-1.5">
