@@ -14,12 +14,16 @@ export const ProtectedAdminRoute: React.FC<ProtectedAdminRouteProps> = ({ childr
   useEffect(() => {
     // Check user after component mounts
     const user = StorageService.getUser();
+    const currentPath = window.location.pathname;
     
     // Use setTimeout to ensure navigation happens after render
     const timer = setTimeout(() => {
       // Check if user is authenticated
       if (!user) {
-        navigate('/login', { replace: true });
+        // Only navigate if not already on login page
+        if (currentPath !== '/login') {
+          navigate('/login', { replace: true });
+        }
         setIsChecking(false);
         return;
       }
@@ -29,9 +33,15 @@ export const ProtectedAdminRoute: React.FC<ProtectedAdminRouteProps> = ({ childr
         // On portal subdomain, stay on login. On other domains, redirect to dashboard
         const isPortal = typeof window !== 'undefined' && window.location.hostname.includes('portal.menupi.com');
         if (isPortal) {
-          navigate('/login', { replace: true });
+          // Only navigate if not already on login page
+          if (currentPath !== '/login') {
+            navigate('/login', { replace: true });
+          }
         } else {
-          navigate('/dashboard', { replace: true });
+          // Only navigate if not already on dashboard
+          if (currentPath !== '/dashboard') {
+            navigate('/dashboard', { replace: true });
+          }
         }
         setIsChecking(false);
         return;

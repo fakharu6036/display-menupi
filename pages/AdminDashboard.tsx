@@ -163,21 +163,29 @@ const AdminDashboard: React.FC = () => {
         // Use setTimeout to ensure navigation happens after render
         const timer = setTimeout(() => {
             const u = StorageService.getUser();
+            const currentPath = location.pathname;
+            
             if (u?.role !== UserRole.SUPER_ADMIN) {
                 // On portal subdomain, redirect to login. On other domains, redirect to dashboard
                 const isPortal = window.location.hostname.includes('portal.menupi.com');
                 if (isPortal) {
-                    navigate('/login', { replace: true });
+                    // Only navigate if not already on login page
+                    if (currentPath !== '/login') {
+                        navigate('/login', { replace: true });
+                    }
                 } else {
-                    navigate('/dashboard', { replace: true });
+                    // Only navigate if not already on dashboard
+                    if (currentPath !== '/dashboard') {
+                        navigate('/dashboard', { replace: true });
+                    }
                 }
                 return;
             }
             
             setCurrentAdmin(u);
             
-            // Redirect /admin to /admin/dashboard
-            if (location.pathname === '/admin' || location.pathname === '/') {
+            // Redirect /admin to /admin/dashboard (only if not already there)
+            if ((currentPath === '/admin' || currentPath === '/') && currentPath !== '/admin/dashboard') {
                 navigate('/admin/dashboard', { replace: true });
                 return;
             }

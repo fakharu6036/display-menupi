@@ -61,10 +61,11 @@ export const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) =>
 
   // Require authentication for protected pages
   useEffect(() => {
-    if (!user && !isAuthPage && !isTvPage && !isAdminPage) {
+    // Only navigate if we're not already on the target page
+    if (!user && !isAuthPage && !isTvPage && !isAdminPage && location.pathname !== '/login') {
       navigate('/login', { replace: true });
     }
-  }, [user, navigate, isAuthPage, isTvPage, isAdminPage]);
+  }, [user, navigate, isAuthPage, isTvPage, isAdminPage, location.pathname]);
   
   // For TV pages, return minimal layout
   if (isTvPage) {
