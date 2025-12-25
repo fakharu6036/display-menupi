@@ -9,15 +9,14 @@ interface ProtectedAdminRouteProps {
 
 export const ProtectedAdminRoute: React.FC<ProtectedAdminRouteProps> = ({ children }) => {
   const navigate = useNavigate();
-  const [isAuthorized, setIsAuthorized] = useState<boolean | null>(null);
+  
+  // Check user synchronously first to avoid blank screen
+  const user = StorageService.getUser();
   
   useEffect(() => {
-    const user = StorageService.getUser();
-    
     // Check if user is authenticated
     if (!user) {
       navigate('/login', { replace: true });
-      setIsAuthorized(false);
       return;
     }
     
@@ -25,15 +24,12 @@ export const ProtectedAdminRoute: React.FC<ProtectedAdminRouteProps> = ({ childr
     if (user.role !== UserRole.SUPER_ADMIN) {
       // Redirect to dashboard - user doesn't have admin access
       navigate('/dashboard', { replace: true });
-      setIsAuthorized(false);
       return;
     }
-    
-    setIsAuthorized(true);
-  }, [navigate]);
+  }, [user, navigate]);
   
-  // Don't render children until authorization is checked
-  if (isAuthorized === null || !isAuthorized) {
+  // Don't render children if user is not authenticated or not admin
+  if (!user || user.role !== UserRole.SUPER_ADMIN) {
     return null;
   }
   
