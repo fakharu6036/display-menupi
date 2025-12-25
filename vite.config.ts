@@ -25,8 +25,10 @@ export default defineConfig(({ mode }) => {
           output: {
             manualChunks: undefined
           }
-        }
+        },
+        copyPublicDir: true
       },
+      publicDir: false,
       // SPA fallback - serve index.html for all routes
       preview: {
         port: port,
