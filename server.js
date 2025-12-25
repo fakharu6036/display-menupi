@@ -49,6 +49,7 @@ const upload = multer({ storage });
 // Database Connection
 // Railway provides all database credentials via environment variables
 // MySQL2 pool configuration (only valid options to avoid warnings)
+// Updated: 2025-12-25 - Removed invalid options (acquireTimeout, timeout, reconnect)
 const dbConfig = {
     host: process.env.DB_HOST,
     user: process.env.DB_USER,
