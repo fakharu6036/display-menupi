@@ -1638,6 +1638,6 @@ app.listen(PORT, () => {
     console.log(`📡 Port: ${PORT}`);
     console.log(`🌐 Base URL: ${BASE_URL}`);
     console.log(`📅 Deployed: 2025-12-25 (v2.0.0)`);
-    console.log(`✅ Code Version: 35aad75`);
+    console.log(`✅ Code Version: c955638`);
     console.log('='.repeat(60));
 });
