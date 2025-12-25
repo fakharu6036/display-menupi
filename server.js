@@ -70,14 +70,18 @@ delete dbConfig.timeout;
 delete dbConfig.reconnect;
 
 // Also check and remove from process.env if they exist (Railway might set these)
+// CRITICAL: These warnings help identify if Railway env vars are causing MySQL warnings
 if (process.env.MYSQL_ACQUIRE_TIMEOUT || process.env.DB_ACQUIRE_TIMEOUT) {
-    console.warn('⚠️  Removing invalid MySQL option: acquireTimeout (not valid for pools)');
+    console.warn('⚠️  WARNING: Invalid MySQL env var detected: acquireTimeout (not valid for pools)');
+    console.warn('⚠️  ACTION: Remove MYSQL_ACQUIRE_TIMEOUT or DB_ACQUIRE_TIMEOUT from Railway Variables');
 }
 if (process.env.MYSQL_TIMEOUT || process.env.DB_TIMEOUT) {
-    console.warn('⚠️  Removing invalid MySQL option: timeout (not valid for pools)');
+    console.warn('⚠️  WARNING: Invalid MySQL env var detected: timeout (not valid for pools)');
+    console.warn('⚠️  ACTION: Remove MYSQL_TIMEOUT or DB_TIMEOUT from Railway Variables');
 }
 if (process.env.MYSQL_RECONNECT || process.env.DB_RECONNECT) {
-    console.warn('⚠️  Removing invalid MySQL option: reconnect (not valid for pools)');
+    console.warn('⚠️  WARNING: Invalid MySQL env var detected: reconnect (not valid for pools)');
+    console.warn('⚠️  ACTION: Remove MYSQL_RECONNECT or DB_RECONNECT from Railway Variables');
 }
 
 // Validate required database configuration
