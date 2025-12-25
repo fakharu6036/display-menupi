@@ -1592,6 +1592,12 @@ if (!PORT) {
     process.exit(1);
 }
 app.listen(PORT, () => {
-    console.log(`🚀 API Server running on port ${PORT}`);
-    console.log(`📡 API Base URL: ${BASE_URL}`);
+    console.log('='.repeat(60));
+    console.log('🚀 MENUPI API Server');
+    console.log('='.repeat(60));
+    console.log(`📡 Port: ${PORT}`);
+    console.log(`🌐 Base URL: ${BASE_URL}`);
+    console.log(`📅 Deployed: 2025-12-25 (v2.0.0)`);
+    console.log(`✅ Code Version: eb2016b`);
+    console.log('='.repeat(60));
 });
