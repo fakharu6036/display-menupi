@@ -23,6 +23,26 @@ export const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) =>
   const [user, setUser] = useState(StorageService.getUser());
   const [isExpanded, setIsExpanded] = useState(false);
 
+  // Calculate page types BEFORE any hooks (needed for useEffect)
+  const isTvContext = isTvPlayerContext();
+  const isTvPage = isTvContext 
+    ? (location.pathname === '/' || /^\/[A-Z0-9-]+$/.test(location.pathname))
+    : (location.pathname === '/tv' || location.pathname.startsWith('/tv/'));
+  const isAuthPage = location.pathname === '/login' || location.pathname === '/register';
+  const isAdminPage = location.pathname.startsWith('/admin');
+
+  // Navigation items - MUST be called before any early returns (Rules of Hooks)
+  // Admin tab removed - will be replaced with features from display-menupi repo
+  const navItems = React.useMemo(() => {
+    return [
+      { to: '/dashboard', icon: Home, label: 'Home' },
+      { to: '/media', icon: ImageIcon, label: 'Media' },
+      { to: '/screens', icon: Monitor, label: 'Screens' },
+      { to: '/tvs', icon: Tv, label: 'TVs' },
+      { to: '/schedules', icon: Clock, label: 'Schedules' },
+    ];
+  }, []); // No dependencies needed
+
   // Update user when storage changes - but only if user actually changed
   useEffect(() => {
     const handleStorageChange = () => {
@@ -41,31 +61,10 @@ export const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) =>
 
   // Require authentication for protected pages
   useEffect(() => {
-    if (!user && !isAuthPage && !isTvPage && !location.pathname.startsWith('/admin')) {
+    if (!user && !isAuthPage && !isTvPage && !isAdminPage) {
       navigate('/login', { replace: true });
     }
-  }, [user, navigate, location.pathname]);
-
-  // Navigation items - MUST be called before any early returns (Rules of Hooks)
-  // Admin tab removed - will be replaced with features from display-menupi repo
-  const navItems = React.useMemo(() => {
-    return [
-      { to: '/dashboard', icon: Home, label: 'Home' },
-      { to: '/media', icon: ImageIcon, label: 'Media' },
-      { to: '/screens', icon: Monitor, label: 'Screens' },
-      { to: '/tvs', icon: Tv, label: 'TVs' },
-      { to: '/schedules', icon: Clock, label: 'Schedules' },
-    ];
-  }, []); // No dependencies needed
-
-  // High-priority check for Public Player pages to strip ALL UI
-  // On TV player context, check for root or screen code pattern
-  // On dashboard context, check for /tv paths
-  const isTvContext = isTvPlayerContext();
-  const isTvPage = isTvContext 
-    ? (location.pathname === '/' || /^\/[A-Z0-9-]+$/.test(location.pathname))
-    : (location.pathname === '/tv' || location.pathname.startsWith('/tv/'));
-  const isAuthPage = location.pathname === '/login' || location.pathname === '/register';
+  }, [user, navigate, isAuthPage, isTvPage, isAdminPage]);
   
   // For TV pages, return minimal layout
   if (isTvPage) {
@@ -78,7 +77,7 @@ export const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) =>
   }
 
   // For admin pages, return without navigation (admin has its own layout)
-  if (location.pathname.startsWith('/admin')) {
+  if (isAdminPage) {
     return <>{children}</>;
   }
 
