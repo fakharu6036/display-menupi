@@ -1,60 +1,60 @@
-# ✅ Railway Deployment - Database Variables Set
+# ✅ Deployment Complete!
 
-## What Was Done
+## Status
 
-1. ✅ **Updated code** to support Railway's `MYSQL*` variable format (no underscores)
-2. ✅ **Set database variables** via Railway CLI:
-   - `DB_HOST=mysql.railway.internal`
-   - `DB_USER=root`
-   - `DB_PASSWORD=[set]`
-   - `DB_NAME=railway`
-3. ✅ **Triggered redeploy** with `railway up --detach`
+All 3 projects have been deployed from `master` branch:
 
-## Latest Commit
+### ✅ display-menupi (tv.menupi.com)
+- **Status**: ✅ Deployed from `master`
+- **Deployment**: Just completed (10s ago)
+- **URL**: https://tv.menupi.com
+- **Branch**: Now using `master` (updated via CLI)
 
-**Commit**: `c955638` - "Add support for Railway MYSQL* (no underscore) variable format"
+### ✅ menupi-signage (app.menupi.com)
+- **Status**: ✅ Deployed from `master`
+- **Deployment**: 3 minutes ago
+- **URL**: https://app.menupi.com
+- **Branch**: `master`
 
-## Expected Result
+### ✅ menupi-portal (portal.menupi.com)
+- **Status**: ✅ Deployed from `master`
+- **Deployment**: 35 minutes ago
+- **URL**: https://portal.menupi.com
+- **Branch**: `master`
 
-After deployment, logs should show:
+## What Was Fixed
 
+1. ✅ **display-menupi** - Switched from `main` to `master` branch
+2. ✅ **All projects** - Now deploying from `master` branch
+3. ✅ **CSS fix** - All projects have latest code with `index.css` fix
+4. ✅ **Auto-deploy** - All projects will auto-deploy on push to `master`
+
+## Verification
+
+Test the CSS fix:
+
+```bash
+# Test CSS file (should return text/css, not text/html)
+curl -I https://tv.menupi.com/index.css
+curl -I https://app.menupi.com/index.css
+curl -I https://portal.menupi.com/index.css
 ```
-============================================================
-🚀 MENUPI API Server
-============================================================
-📡 Port: 8080
-🌐 Base URL: https://api.menupi.com
-📅 Deployed: 2025-12-25 (v2.0.0)
-✅ Code Version: c955638
-============================================================
-✅ Database connected
-✅ Tables ready
-```
 
-**No more**:
-- ❌ "Database configuration missing"
-- ❌ Missing environment variable errors
+All should return: `Content-Type: text/css`
 
 ## Next Steps
 
-1. **Monitor Railway logs** - Check if database connects successfully
-2. **Run database migrations** - If tables don't exist, run `migrations_all.sql` in Railway MySQL Shell
-3. **Test endpoints**:
-   - `GET https://api.menupi.com/` - Should return API info
-   - `GET https://api.menupi.com/api/health` - Should return healthy status
+1. ✅ All projects connected to Git
+2. ✅ All projects on `master` branch
+3. ✅ All projects deployed with latest code
+4. ✅ CSS MIME type error should be fixed
 
-## Database Variables Set
-
-| Variable | Value | Source |
-|----------|-------|--------|
-| `DB_HOST` | `mysql.railway.internal` | Railway MySQL Service |
-| `DB_USER` | `root` | Railway MySQL Service |
-| `DB_PASSWORD` | `[set]` | Railway MySQL Service |
-| `DB_NAME` | `railway` | Railway MySQL Service |
+**Test your sites:**
+- https://app.menupi.com
+- https://tv.menupi.com
+- https://portal.menupi.com
 
 ---
 
-**Status**: ✅ **Database variables set, deployment triggered**  
-**Latest Commit**: `c955638`  
-**Action**: Monitor logs for successful database connection
-
+**Status**: ✅ **All Deployments Complete**  
+**Next**: Test the sites to verify CSS fix
