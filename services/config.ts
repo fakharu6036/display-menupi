@@ -56,7 +56,12 @@ export const getApiBase = (): string => {
   // Priority 1: Check for explicit environment variable (for local backend)
   const envApi = import.meta.env?.VITE_API_BASE_URL || import.meta.env?.VITE_API_URL;
   if (envApi) {
-    return envApi.endsWith('/') ? envApi.slice(0, -1) : envApi;
+    const apiUrl = envApi.endsWith('/') ? envApi.slice(0, -1) : envApi;
+    // Log in development to help debug
+    if (import.meta.env.DEV) {
+      console.log('🔗 Using API URL from environment:', apiUrl);
+    }
+    return apiUrl;
   }
 
   // Priority 2: Production: Detect if we're on a menupi.com subdomain
@@ -67,12 +72,19 @@ export const getApiBase = (): string => {
     if (hostname.includes('menupi.com')) {
       const protocol = window.location.protocol;
       const domain = hostname.split('.').slice(-2).join('.'); // Get menupi.com
-      return `${protocol}//api.${domain}`;
+      const apiUrl = `${protocol}//api.${domain}`;
+      // Log warning if using fallback
+      console.warn('⚠️ VITE_API_BASE_URL not set! Using fallback:', apiUrl);
+      console.warn('💡 Set VITE_API_BASE_URL in Vercel environment variables to use ngrok backend');
+      return apiUrl;
     }
   }
 
   // Fallback: Use production API URL
-  return 'https://api.menupi.com';
+  const fallbackUrl = 'https://api.menupi.com';
+  console.warn('⚠️ VITE_API_BASE_URL not set! Using fallback:', fallbackUrl);
+  console.warn('💡 Set VITE_API_BASE_URL in Vercel environment variables');
+  return fallbackUrl;
 };
 
 /**

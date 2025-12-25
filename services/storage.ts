@@ -16,6 +16,25 @@ import { getApiBase } from './config';
 const API_BASE = getApiBase();
 
 /**
+ * Check if response is HTML (error page) instead of JSON
+ */
+const checkHtmlResponse = async (res: Response, url: string): Promise<void> => {
+  const contentType = res.headers.get('content-type');
+  if (contentType && !contentType.includes('application/json')) {
+    const text = await res.text();
+    console.error('❌ API returned HTML instead of JSON:', {
+      url,
+      status: res.status,
+      contentType,
+      preview: text.substring(0, 300),
+      apiBase: API_BASE,
+      envVar: import.meta.env?.VITE_API_BASE_URL || 'NOT SET'
+    });
+    throw new Error(`API server returned HTML instead of JSON. Check if VITE_API_BASE_URL is set correctly in Vercel. Current API URL: ${API_BASE}`);
+  }
+};
+
+/**
  * Get headers for API requests, including ngrok-skip-browser-warning if needed
  */
 const getHeaders = (includeAuth = true) => {
@@ -148,6 +167,10 @@ export const StorageService = {
     }
     try {
       const res = await fetch(`${API_BASE}/api/media`, { headers: getHeaders() });
+      
+      // Check if response is HTML (error page or ngrok warning)
+      await checkHtmlResponse(res, `${API_BASE}/api/media`);
+      
       if (!res.ok) {
         if (res.status === 401 || res.status === 403) {
           // Clear invalid session
@@ -184,6 +207,14 @@ export const StorageService = {
         };
       });
     } catch (err: any) {
+      // Enhanced error logging
+      if (err.message && err.message.includes('HTML instead of JSON')) {
+        console.error('❌ API Configuration Error:', {
+          apiBase: API_BASE,
+          envVar: import.meta.env?.VITE_API_BASE_URL || 'NOT SET',
+          suggestion: 'Set VITE_API_BASE_URL in Vercel environment variables'
+        });
+      }
       console.error('Failed to fetch media:', err);
       throw err;
     }
@@ -231,6 +262,10 @@ export const StorageService = {
     }
     try {
       const res = await fetch(`${API_BASE}/api/tvs`, { headers: getHeaders() });
+      
+      // Check if response is HTML (error page or ngrok warning)
+      await checkHtmlResponse(res, `${API_BASE}/api/tvs`);
+      
       if (!res.ok) {
         if (res.status === 401 || res.status === 403) {
           localStorage.removeItem('menupi_token');
@@ -347,6 +382,10 @@ export const StorageService = {
     }
     try {
       const res = await fetch(`${API_BASE}/api/schedules`, { headers: getHeaders() });
+      
+      // Check if response is HTML (error page or ngrok warning)
+      await checkHtmlResponse(res, `${API_BASE}/api/schedules`);
+      
       if (!res.ok) {
         if (res.status === 401 || res.status === 403) {
           localStorage.removeItem('menupi_token');
