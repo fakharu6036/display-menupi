@@ -181,6 +181,7 @@ export const getApiHeaders = (includeAuth = false): Record<string, string> => {
   }
   
   // Add ngrok-skip-browser-warning header if using ngrok
+  // This is critical for bypassing ngrok's browser warning page
   const apiBase = getApiBase();
   if (apiBase && (apiBase.includes('ngrok.io') || apiBase.includes('ngrok-free.app') || apiBase.includes('ngrok.app'))) {
     headers['ngrok-skip-browser-warning'] = 'true';

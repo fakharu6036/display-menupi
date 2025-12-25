@@ -16,23 +16,38 @@ import { getApiBase } from './config';
 const API_BASE = getApiBase();
 
 /**
- * Check if response is HTML (error page) instead of JSON
+ * Check if response is HTML (error page or ngrok warning) instead of JSON
  * Returns the response text if HTML, null if JSON
  */
 const checkHtmlResponse = async (res: Response, url: string): Promise<string | null> => {
   const contentType = res.headers.get('content-type');
-  if (contentType && !contentType.includes('application/json')) {
-    // Clone the response so we can read it without consuming the original
-    const clonedRes = res.clone();
-    const text = await clonedRes.text();
+  const clonedRes = res.clone();
+  const text = await clonedRes.text();
+  
+  // Check if response starts with HTML (ngrok warning page or error page)
+  const isHtml = text.trim().startsWith('<!DOCTYPE') || text.trim().startsWith('<!doctype') || text.trim().startsWith('<html');
+  
+  // Also check content-type if available
+  const hasHtmlContentType = contentType && (contentType.includes('text/html') || !contentType.includes('application/json'));
+  
+  if (isHtml || (hasHtmlContentType && !contentType?.includes('application/json'))) {
     console.error('❌ API returned HTML instead of JSON:', {
       url,
       status: res.status,
       contentType,
+      isHtml,
       preview: text.substring(0, 300),
       apiBase: API_BASE,
-      envVar: import.meta.env?.VITE_API_BASE_URL || 'NOT SET'
+      envVar: import.meta.env?.VITE_API_BASE_URL || 'NOT SET',
+      headersSent: res.headers.get('ngrok-skip-browser-warning') || 'Not detected'
     });
+    
+    // Check if it's the ngrok warning page specifically
+    if (text.includes('ngrok') || text.includes('Browser Warning') || text.includes('ngrok-free.app')) {
+      console.error('⚠️ ngrok browser warning detected! The ngrok-skip-browser-warning header may not be working.');
+      console.error('💡 Suggestion: Check if ngrok tunnel is active and try refreshing the page.');
+    }
+    
     return text; // Return the text so caller can throw error
   }
   return null; // Response is JSON, proceed normally
