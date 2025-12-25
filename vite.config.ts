@@ -1,6 +1,7 @@
 import path from 'path';
 import { defineConfig, loadEnv } from 'vite';
 import react from '@vitejs/plugin-react';
+import { copyFileSync } from 'fs';
 
 export default defineConfig(({ mode }) => {
     const env = loadEnv(mode, '.', '');
@@ -26,9 +27,17 @@ export default defineConfig(({ mode }) => {
             manualChunks: undefined
           }
         },
-        copyPublicDir: true
+        copyPublicDir: false
       },
-      publicDir: false,
+      plugins: [
+        react(),
+        {
+          name: 'copy-index-css',
+          closeBundle() {
+            copyFileSync('index.css', 'dist/index.css');
+          }
+        }
+      ],
       // SPA fallback - serve index.html for all routes
       preview: {
         port: port,
