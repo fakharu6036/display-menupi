@@ -37,15 +37,6 @@ export default defineConfig(({ mode }) => {
         },
         copyPublicDir: false
       },
-      plugins: [
-        react(),
-        {
-          name: 'copy-index-css',
-          closeBundle() {
-            copyFileSync('index.css', 'dist/index.css');
-          }
-        }
-      ],
       // SPA fallback - serve index.html for all routes
       preview: {
         port: port,
