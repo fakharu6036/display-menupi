@@ -1,5 +1,5 @@
-import React from 'react';
-import { Navigate } from 'react-router-dom';
+import React, { useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { StorageService } from '../services/storage';
 import { UserRole } from '../types';
 
@@ -8,17 +8,27 @@ interface ProtectedAdminRouteProps {
 }
 
 export const ProtectedAdminRoute: React.FC<ProtectedAdminRouteProps> = ({ children }) => {
+  const navigate = useNavigate();
   const user = StorageService.getUser();
   
-  // Check if user is authenticated
-  if (!user) {
-    return <Navigate to="/login" replace />;
-  }
+  useEffect(() => {
+    // Check if user is authenticated
+    if (!user) {
+      navigate('/login', { replace: true });
+      return;
+    }
+    
+    // Check if user has SUPER_ADMIN role (from display-menupi repo)
+    if (user.role !== UserRole.SUPER_ADMIN) {
+      // Redirect to dashboard - user doesn't have admin access
+      navigate('/dashboard', { replace: true });
+      return;
+    }
+  }, [user, navigate]);
   
-  // Check if user has SUPER_ADMIN role (from display-menupi repo)
-  if (user.role !== UserRole.SUPER_ADMIN) {
-    // Redirect to dashboard - user doesn't have admin access
-    return <Navigate to="/dashboard" replace />;
+  // Don't render children if user is not authenticated or not admin
+  if (!user || user.role !== UserRole.SUPER_ADMIN) {
+    return null;
   }
   
   return <>{children}</>;

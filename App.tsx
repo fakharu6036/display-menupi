@@ -49,19 +49,11 @@ const App: React.FC = () => {
             <>
               <Route
                 path="/"
-                element={
-                  <ProtectedAdminRoute>
-                    <Navigate to="/admin/dashboard" replace />
-                  </ProtectedAdminRoute>
-                }
+                element={<Navigate to="/admin/dashboard" replace />}
               />
               <Route
                 path="/admin"
-                element={
-                  <ProtectedAdminRoute>
-                    <Navigate to="/admin/dashboard" replace />
-                  </ProtectedAdminRoute>
-                }
+                element={<Navigate to="/admin/dashboard" replace />}
               />
               <Route
                 path="/admin/dashboard"
