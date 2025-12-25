@@ -52,13 +52,20 @@ const upload = multer({ storage });
 // Updated: 2025-12-25 - Removed invalid options (acquireTimeout, timeout, reconnect)
 // Build dbConfig object - ONLY include valid pool options
 // CRITICAL: Railway might have env vars that add invalid options - we must filter them out
+// Railway MySQL service provides MYSQL_* variables, but we also support DB_* for flexibility
 const dbConfig = {};
 
+// Support both Railway's MYSQL_* prefix and our DB_* prefix
+const dbHost = process.env.DB_HOST || process.env.MYSQL_HOST;
+const dbUser = process.env.DB_USER || process.env.MYSQL_USER;
+const dbPassword = process.env.DB_PASSWORD || process.env.MYSQL_PASSWORD;
+const dbName = process.env.DB_NAME || process.env.MYSQL_DATABASE;
+
 // Only add valid configuration options
-if (process.env.DB_HOST) dbConfig.host = process.env.DB_HOST;
-if (process.env.DB_USER) dbConfig.user = process.env.DB_USER;
-if (process.env.DB_PASSWORD) dbConfig.password = process.env.DB_PASSWORD;
-if (process.env.DB_NAME) dbConfig.database = process.env.DB_NAME;
+if (dbHost) dbConfig.host = dbHost;
+if (dbUser) dbConfig.user = dbUser;
+if (dbPassword) dbConfig.password = dbPassword;
+if (dbName) dbConfig.database = dbName;
 
 // Valid pool options only
 dbConfig.waitForConnections = true;
@@ -90,10 +97,13 @@ if (process.env.MYSQL_RECONNECT || process.env.DB_RECONNECT) {
 // Validate required database configuration
 if (!dbConfig.host || !dbConfig.user || !dbConfig.database) {
     console.error('❌ Database configuration missing. Required environment variables:');
-    console.error('   - DB_HOST');
-    console.error('   - DB_USER');
-    console.error('   - DB_NAME');
-    console.error('   - DB_PASSWORD');
+    console.error('   - DB_HOST or MYSQL_HOST');
+    console.error('   - DB_USER or MYSQL_USER');
+    console.error('   - DB_NAME or MYSQL_DATABASE');
+    console.error('   - DB_PASSWORD or MYSQL_PASSWORD');
+    console.error('');
+    console.error('💡 Railway MySQL service provides MYSQL_* variables automatically when linked.');
+    console.error('💡 Link your MySQL service in Railway Dashboard → Variables → Add Reference');
     process.exit(1);
 }
 
