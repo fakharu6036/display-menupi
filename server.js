@@ -1625,12 +1625,29 @@ app.post('/api/admin/plan-requests/:id/deny', authenticateToken, requireAdmin, a
 });
 
 // Railway automatically sets process.env.PORT
-// No fallback needed - Railway requires PORT to be set
+// CRITICAL: Railway might set PORT from MySQL service (3306) - we must reject that
 const PORT = process.env.PORT;
 if (!PORT) {
     console.error('❌ PORT environment variable not set. Railway should set this automatically.');
     process.exit(1);
 }
+
+// Validate PORT is not a database port
+const portNum = parseInt(PORT, 10);
+if (portNum === 3306 || portNum === 5432 || portNum === 27017) {
+    console.error('❌ CRITICAL: PORT is set to a database port!');
+    console.error(`   Current PORT: ${PORT} (this is a MySQL/PostgreSQL/MongoDB port)`);
+    console.error('');
+    console.error('💡 SOLUTION:');
+    console.error('   1. Railway Dashboard → Your Web Service (NOT MySQL service)');
+    console.error('   2. Variables tab → Remove PORT variable if it exists');
+    console.error('   3. Railway will auto-set PORT for web services (usually 8080)');
+    console.error('   4. Make sure backend is deployed to WEB service, not MySQL service');
+    console.error('');
+    console.error('⚠️  Server cannot start on database port. Exiting...');
+    process.exit(1);
+}
+
 app.listen(PORT, () => {
     console.log('='.repeat(60));
     console.log('🚀 MENUPI API Server');
