@@ -185,11 +185,24 @@ export const StorageService = {
       throw new Error('API server not configured');
     }
     try {
-      const res = await fetch(`${API_BASE}/api/media`, { headers: getHeaders() });
+      const headers = getHeaders();
+      // Log headers for debugging (only in dev)
+      if (import.meta.env.DEV) {
+        console.log('🔗 API Request Headers:', headers);
+      }
+      
+      const res = await fetch(`${API_BASE}/api/media`, { headers });
       
       // Check if response is HTML (error page or ngrok warning)
       const htmlText = await checkHtmlResponse(res, `${API_BASE}/api/media`);
       if (htmlText) {
+        // Check if it's specifically the ngrok warning page
+        if (htmlText.includes('ngrok') || htmlText.includes('Browser Warning') || htmlText.includes('ngrok-free.app')) {
+          // Show user-friendly error message
+          const errorMsg = `ngrok browser warning detected. Please visit ${API_BASE}/api/health once to bypass the warning, then refresh this page.`;
+          console.error('⚠️', errorMsg);
+          throw new Error(errorMsg);
+        }
         throw new Error(`API server returned HTML instead of JSON. Check if VITE_API_BASE_URL is set correctly in Vercel. Current API URL: ${API_BASE}`);
       }
       
