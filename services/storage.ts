@@ -15,16 +15,46 @@ import { getApiBase } from './config';
 
 const API_BASE = getApiBase();
 
-const getHeaders = () => {
+/**
+ * Get headers for API requests, including ngrok-skip-browser-warning if needed
+ */
+const getHeaders = (includeAuth = true) => {
   try {
-    const token = localStorage.getItem('menupi_token');
-    return {
-      'Authorization': `Bearer ${token || ''}`,
+    const token = includeAuth ? localStorage.getItem('menupi_token') : null;
+    const headers: Record<string, string> = {
       'Content-Type': 'application/json'
     };
+    
+    if (token) {
+      headers['Authorization'] = `Bearer ${token}`;
+    }
+    
+    // Add ngrok-skip-browser-warning header if using ngrok
+    if (API_BASE && (API_BASE.includes('ngrok.io') || API_BASE.includes('ngrok-free.app') || API_BASE.includes('ngrok.app'))) {
+      headers['ngrok-skip-browser-warning'] = 'true';
+    }
+    
+    return headers;
   } catch {
-    return { 'Content-Type': 'application/json' };
+    const headers: Record<string, string> = { 'Content-Type': 'application/json' };
+    
+    // Add ngrok-skip-browser-warning header if using ngrok
+    if (API_BASE && (API_BASE.includes('ngrok.io') || API_BASE.includes('ngrok-free.app') || API_BASE.includes('ngrok.app'))) {
+      headers['ngrok-skip-browser-warning'] = 'true';
+    }
+    
+    return headers;
   }
+};
+
+/**
+ * Get ngrok skip browser warning header (for use in direct fetch calls)
+ */
+export const getNgrokHeader = (): Record<string, string> => {
+  if (API_BASE && (API_BASE.includes('ngrok.io') || API_BASE.includes('ngrok-free.app') || API_BASE.includes('ngrok.app'))) {
+    return { 'ngrok-skip-browser-warning': 'true' };
+  }
+  return {};
 };
 
 export const StorageService = {

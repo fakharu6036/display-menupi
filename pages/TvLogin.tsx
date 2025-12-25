@@ -4,7 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import { Tv, Wifi, Globe, ArrowRight, AlertCircle, RefreshCw, Smartphone, Key } from 'lucide-react';
 import { QRCodeSVG } from 'qrcode.react';
 import { StorageService } from '../services/storage';
-import { getApiBase, getTvPlayerPath } from '../services/config';
+import { getApiBase, getTvPlayerPath, getApiHeaders } from '../services/config';
 import { getDeviceId } from '../services/deviceFingerprint';
 
 const TvLogin: React.FC = () => {
@@ -29,7 +29,7 @@ const TvLogin: React.FC = () => {
             const API_BASE = getApiBase();
             const res = await fetch(`${API_BASE}/api/tvs/register`, {
               method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
+              headers: getApiHeaders(),
               body: JSON.stringify({ deviceId })
             });
             
@@ -85,7 +85,9 @@ const TvLogin: React.FC = () => {
     const checkPairing = async () => {
       try {
         const API_BASE = getApiBase();
-        const res = await fetch(`${API_BASE}/api/tvs/public/${hardwareId}`);
+        const res = await fetch(`${API_BASE}/api/tvs/public/${hardwareId}`, {
+          headers: getApiHeaders()
+        });
         if (!res.ok) return;
         const data = await res.json();
         
@@ -129,7 +131,7 @@ const TvLogin: React.FC = () => {
       // Assign screen code to device (endpoint will verify screen exists)
       const assignRes = await fetch(`${API_BASE}/api/tvs/assign-screen-code`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: getApiHeaders(),
         body: JSON.stringify({ 
           deviceId: hardwareId, 
           screenCode 

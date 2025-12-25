@@ -147,3 +147,32 @@ export const getAdminUrl = (): string => {
   }
 };
 
+/**
+ * Get headers for API requests, including ngrok-skip-browser-warning if needed
+ * Use this for direct fetch calls outside of StorageService
+ */
+export const getApiHeaders = (includeAuth = false): Record<string, string> => {
+  const headers: Record<string, string> = {
+    'Content-Type': 'application/json'
+  };
+  
+  if (includeAuth) {
+    try {
+      const token = localStorage.getItem('menupi_token');
+      if (token) {
+        headers['Authorization'] = `Bearer ${token}`;
+      }
+    } catch {
+      // Ignore errors
+    }
+  }
+  
+  // Add ngrok-skip-browser-warning header if using ngrok
+  const apiBase = getApiBase();
+  if (apiBase && (apiBase.includes('ngrok.io') || apiBase.includes('ngrok-free.app') || apiBase.includes('ngrok.app'))) {
+    headers['ngrok-skip-browser-warning'] = 'true';
+  }
+  
+  return headers;
+};
+

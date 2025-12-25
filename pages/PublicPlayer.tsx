@@ -2,7 +2,7 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { StorageService } from '../services/storage';
-import { getApiBase, getTvPlayerPath } from '../services/config';
+import { getApiBase, getTvPlayerPath, getApiHeaders } from '../services/config';
 import { getDeviceId } from '../services/deviceFingerprint';
 import { MediaItem, Screen, MediaType, PlanType } from '../types';
 import { 
@@ -49,7 +49,9 @@ const PublicPlayer: React.FC = () => {
       const API_BASE = getApiBase();
       
       // Get screen data from public endpoint
-      const res = await fetch(`${API_BASE}/api/screens/public/${screenCode}`);
+      const res = await fetch(`${API_BASE}/api/screens/public/${screenCode}`, {
+        headers: getApiHeaders()
+      });
       if (!res.ok) {
         if (res.status === 404) {
           setError("Screen not found. Please check the screen code.");
@@ -83,7 +85,7 @@ const PublicPlayer: React.FC = () => {
       if (deviceId) {
         await fetch(`${API_BASE}/api/tvs/heartbeat`, {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
+          headers: getApiHeaders(),
           body: JSON.stringify({ deviceId })
         });
       }
@@ -125,7 +127,9 @@ const PublicPlayer: React.FC = () => {
     const checkDashboardAssignment = async () => {
       try {
         const API_BASE = getApiBase();
-        const res = await fetch(`${API_BASE}/api/tvs/public/${deviceId}`);
+        const res = await fetch(`${API_BASE}/api/tvs/public/${deviceId}`, {
+          headers: getApiHeaders()
+        });
         if (res.ok) {
           const data = await res.json();
           if (data.paired && data.tv && data.tv.assignedScreenCode) {
@@ -157,7 +161,7 @@ const PublicPlayer: React.FC = () => {
       const API_BASE = getApiBase();
       const res = await fetch(`${API_BASE}/api/tvs/assign-screen-code`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: getApiHeaders(),
         body: JSON.stringify({ 
           deviceId, 
           screenCode: manualScreenCode.trim().toUpperCase() 
